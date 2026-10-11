@@ -82,8 +82,6 @@ Custom GP2040-CE board pinmap.
 | [`docs/firmware-MultiSourceController.md`](docs/firmware-MultiSourceController.md) | Video converter (CXA2025AS) |
 | [`docs/firmware-PowerController.md`](docs/firmware-PowerController.md) | Power sequencer & lighting |
 | [`docs/firmware-IR_SignalAnalyzer.md`](docs/firmware-IR_SignalAnalyzer.md) | IR capture debug utility |
-| [`docs/complete_circuit_diagram.html`](docs/complete_circuit_diagram.html) | IR LED driver & USB multiplexer circuit, BOM, pin map, channel truth table, PCB layout guidelines |
-| [`docs/sn74cb3q3253_pinmap.html`](docs/sn74cb3q3253_pinmap.html) | SN74CB3Q3253PW detailed pinmap and wiring for the two MUX chips |
 
 ---
 
