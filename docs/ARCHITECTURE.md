@@ -95,7 +95,9 @@ Driven from the 74HC595 bits `MUX1_SEL/1_OE/2_SEL/2_OE`:
 | CH5 (JAMMA) | X | 1 (OFF) | X | 1 (OFF) | none — HDMI only, pads go through JVS |
 
 The SEL/OE logic above matches `setKvmChannel()` in both `MegaKey_AVR128DB64` (74HC595
-bits) and `MegaKey_IO` (direct GPIO A10/A12/A14/A15).
+bits) and `MegaKey_IO` (direct GPIO A10/A12/A14/A15). Circuit details:
+[`circuit-ir-usb-mux.md`](circuit-ir-usb-mux.md),
+[`sn74cb3q3253-mux.md`](sn74cb3q3253-mux.md).
 
 ### Pad protocol modes (`selected_mode`)
 

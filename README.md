@@ -82,6 +82,8 @@ Custom GP2040-CE board pinmap.
 | [`docs/firmware-MultiSourceController.md`](docs/firmware-MultiSourceController.md) | Video converter (CXA2025AS) |
 | [`docs/firmware-PowerController.md`](docs/firmware-PowerController.md) | Power sequencer & lighting |
 | [`docs/firmware-IR_SignalAnalyzer.md`](docs/firmware-IR_SignalAnalyzer.md) | IR capture debug utility |
+| [`docs/circuit-ir-usb-mux.md`](docs/circuit-ir-usb-mux.md) | IR LED driver circuit, USB mux control, BOM, PCB layout rules |
+| [`docs/sn74cb3q3253-mux.md`](docs/sn74cb3q3253-mux.md) | SN74CB3Q3253PW control semantics and wiring notes |
 
 ---
 
