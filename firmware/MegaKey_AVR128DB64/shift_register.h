@@ -1,7 +1,7 @@
 // ============================================================================
 //  shift_register.h
-//  74HC595 × 2 캐스케이드 시프트 레지스터 드라이버 (16비트 출력)
-//  소프트웨어 SPI 방식 (별도 SPI 하드웨어 미사용)
+//  74HC595 × 2 cascaded shift register driver (16-bit output)
+//  Software SPI approach (separate SPI hardware not used)
 // ============================================================================
 #ifndef SHIFT_REGISTER_H
 #define SHIFT_REGISTER_H
@@ -25,7 +25,7 @@ public:
     flush();
   }
   
-  // 특정 비트 설정 (즉시 반영하지 않음, flush() 필요)
+  // Set a specific bit (not applied immediately, requires flush())
   inline void setBit(uint8_t bit_idx, bool value) {
     uint16_t mask = (uint16_t)1 << bit_idx;
     uint16_t new_state = value ? (_state | mask) : (_state & ~mask);
@@ -35,40 +35,40 @@ public:
     }
   }
   
-  // 비트 토글
+  // Toggle a bit
   inline void toggleBit(uint8_t bit_idx) {
     _state ^= ((uint16_t)1 << bit_idx);
     _dirty = true;
   }
   
-  // 변경된 경우에만 하드웨어로 전송
+  // Send to hardware only when changed
   void flush() {
     if (!_dirty) return;
     
-    // VPORT 직접 액세스로 빠른 비트뱅잉 (DxCore 매크로 의존하지 않음)
-    // 16비트를 MSB-first로 전송 (SR2의 Q1 = MUX2_OE가 가장 먼저, SR1의 Q0 = KVM1_LED가 가장 마지막)
-    // → ShiftOut MSBFIRST, 데이터를 비트 15부터 0까지 전송
+    // Fast bit-banging via direct VPORT access (does not rely on DxCore macros)
+    // Transmits 16 bits MSB-first (SR2's Q1 = MUX2_OE goes first, SR1's Q0 = KVM1_LED goes last)
+    // → ShiftOut MSBFIRST, sending data from bit 15 down to 0
     
     uint16_t data = _state;
     for (int8_t i = 15; i >= 0; i--) {
-      // DATA 핀에 비트 출력
+      // Output bit on DATA pin
       digitalWriteFast(SR_DATA_PIN, (data >> i) & 0x01);
-      // CLOCK 펄스 (rising edge로 데이터 시프트)
+      // CLOCK pulse (data shifts on rising edge)
       digitalWriteFast(SR_CLOCK_PIN, HIGH);
       digitalWriteFast(SR_CLOCK_PIN, LOW);
     }
     
-    // LATCH 펄스 (rising edge로 출력 래치)
+    // LATCH pulse (output latches on rising edge)
     digitalWriteFast(SR_LATCH_PIN, HIGH);
     digitalWriteFast(SR_LATCH_PIN, LOW);
     
     _dirty = false;
   }
   
-  // 현재 상태 읽기 (디버그용)
+  // Read current state (for debugging)
   inline uint16_t getState() const { return _state; }
   
-  // 강제 새로고침 (예: 글리치 복구용)
+  // Force refresh (e.g. for glitch recovery)
   void forceRefresh() {
     _dirty = true;
     flush();

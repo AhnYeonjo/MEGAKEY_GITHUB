@@ -43,29 +43,29 @@
     // ===================================
     // === Player 1 Keyboard Mapping ===
     // ===================================
-    // 방향키 - 화살표 키
+    // D-pad - arrow keys
     #define KEY_DPAD_UP     HID_KEY_ARROW_UP
     #define KEY_DPAD_DOWN   HID_KEY_ARROW_DOWN
     #define KEY_DPAD_LEFT   HID_KEY_ARROW_LEFT
     #define KEY_DPAD_RIGHT  HID_KEY_ARROW_RIGHT
 
-    #define KEY_BUTTON_E1   HID_KEY_G  // ANAL UP 버튼
-    #define KEY_BUTTON_E2   HID_KEY_B  // ANAL DOWN 버튼
-    #define KEY_BUTTON_E3   HID_KEY_V  // ANAL LEFT 버튼
-    #define KEY_BUTTON_E4   HID_KEY_N  // ANAL RIGHT 버튼
+    #define KEY_BUTTON_E1   HID_KEY_G  // ANAL UP button
+    #define KEY_BUTTON_E2   HID_KEY_B  // ANAL DOWN button
+    #define KEY_BUTTON_E3   HID_KEY_V  // ANAL LEFT button
+    #define KEY_BUTTON_E4   HID_KEY_N  // ANAL RIGHT button
 
-    // 액션 버튼 - MAME 표준 (A/S/Z/X 등)
-    #define KEY_BUTTON_B1   HID_KEY_A  // A 버튼
-    #define KEY_BUTTON_B2   HID_KEY_S  // B 버튼
-    #define KEY_BUTTON_R2   HID_KEY_D  // RT 버튼
-    #define KEY_BUTTON_L2   HID_KEY_F  // LT 버튼
-    #define KEY_BUTTON_B3   HID_KEY_Q  // X 버튼
-    #define KEY_BUTTON_B4   HID_KEY_W  // Y 버튼
-    #define KEY_BUTTON_R1   HID_KEY_E  // RB 버튼
-    #define KEY_BUTTON_L1   HID_KEY_R  // LB 버튼
+    // Action buttons - MAME standard (A/S/Z/X etc.)
+    #define KEY_BUTTON_B1   HID_KEY_A  // A button
+    #define KEY_BUTTON_B2   HID_KEY_S  // B button
+    #define KEY_BUTTON_R2   HID_KEY_D  // RT button
+    #define KEY_BUTTON_L2   HID_KEY_F  // LT button
+    #define KEY_BUTTON_B3   HID_KEY_Q  // X button
+    #define KEY_BUTTON_B4   HID_KEY_W  // Y button
+    #define KEY_BUTTON_R1   HID_KEY_E  // RB button
+    #define KEY_BUTTON_L1   HID_KEY_R  // LB button
     
-    // 시스템 버튼
-    #define KEY_BUTTON_S1   HID_KEY_5  // SELECT (코인)
+    // System buttons
+    #define KEY_BUTTON_S1   HID_KEY_5  // SELECT (coin)
     #define KEY_BUTTON_S2   HID_KEY_1  // START (1P)
     #define KEY_BUTTON_L3   HID_KEY_Z
     #define KEY_BUTTON_R3   HID_KEY_X
@@ -76,18 +76,18 @@
     // ===================================
     // === Player 2 Keyboard Mapping ===
     // ===================================
-    // 방향키 - U/J/H/K
+    // D-pad - U/J/H/K
     #define KEY_DPAD_UP     HID_KEY_U
     #define KEY_DPAD_DOWN   HID_KEY_J
     #define KEY_DPAD_LEFT   HID_KEY_H
     #define KEY_DPAD_RIGHT  HID_KEY_K
 
-    #define KEY_BUTTON_E1   HID_KEY_O  // ANAL UP 버튼
-    #define KEY_BUTTON_E2   HID_KEY_L  // ANAL DOWN 버튼
-    #define KEY_BUTTON_E3   HID_KEY_I  // ANAL LEFT 버튼
-    #define KEY_BUTTON_E4   HID_KEY_P  // ANAL RIGHT 버튼    
+    #define KEY_BUTTON_E1   HID_KEY_O  // ANAL UP button
+    #define KEY_BUTTON_E2   HID_KEY_L  // ANAL DOWN button
+    #define KEY_BUTTON_E3   HID_KEY_I  // ANAL LEFT button
+    #define KEY_BUTTON_E4   HID_KEY_P  // ANAL RIGHT button    
 
-    // 액션 버튼 - 숫자 키패드
+    // Action buttons - numeric keypad
     #define KEY_BUTTON_B1   HID_KEY_KEYPAD_4
     #define KEY_BUTTON_B2   HID_KEY_KEYPAD_5
     #define KEY_BUTTON_R2   HID_KEY_KEYPAD_6
@@ -97,7 +97,7 @@
     #define KEY_BUTTON_R1   HID_KEY_KEYPAD_9
     #define KEY_BUTTON_L1   HID_KEY_KEYPAD_0
     
-    // 시스템 버튼
+    // System buttons
     #define KEY_BUTTON_S1   HID_KEY_6
     #define KEY_BUTTON_S2   HID_KEY_2
     #define KEY_BUTTON_L3   HID_KEY_KEYPAD_ENTER
@@ -106,6 +106,6 @@
     #define KEY_BUTTON_A2   HID_KEY_TAB
 #endif
 
-// 핫키 기능 버튼 (공통)
+// Hotkey function button (shared)
 #define KEY_BUTTON_FN   -1
 #endif

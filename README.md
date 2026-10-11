@@ -1,76 +1,83 @@
 # MegaKey — JAMMA / Arcade Controller Firmware Collection
 
-아케이드 시스템(JAMMA · KVM · 콘솔)을 위한 커스텀 하드웨어 펌웨어 모음입니다.
+Firmware for custom arcade hardware: JAMMA boards, KVM switching, and console adapters.
 
-> **개발자**: 안연조 (An Yeon-jo)
-> **보드**: AVR128DB64 · ATmega32U4 (Pro Micro) · RP2040 (GP2040-CE) · STM32
+> **Author**: An Yeon-jo
+> **Boards**: AVR128DB64 · ATmega32U4 (Pro Micro) · RP2040 (GP2040-CE) · STM32
 
 ---
 
-## 구조
+## Repository layout
 
 ```
 MEGAKEY/
-├── firmware/              # Arduino / Microcontroller 스케치
-│   ├── MegaKey_AVR128DB64/   # ★ 메인 보드 (v4.0, AVR128DB64-I/PT)
-│   ├── MegaKey_IO/           # 이전 세대 보드 (Pro Micro 기반 JVS IO)
-│   ├── MultiSourceController/ # 멀티소스 → JAMMA 변환기 (CXA2025AS)
-│   ├── PowerController/      # 시퀀스 전원 제어기
-│   └── IR_SignalAnalyzer/    # IR(NEC) 신호 분석 유틸
+├── firmware/              # Arduino / microcontroller sketches
+│   ├── MegaKey_AVR128DB64/    # Main board (v4.0, AVR128DB64-I/PT)
+│   ├── MegaKey_IO/            # Previous-generation board (Pro Micro JVS IO)
+│   ├── MultiSourceController/ # Multi-source → JAMMA converter (CXA2025AS)
+│   ├── PowerController/       # Sequenced power controller
+│   └── IR_SignalAnalyzer/     # IR (NEC) signal analysis utility
 │
-├── rp2040/                # RP2040 / GP2040-CE 관련
-│   ├── addons/               # Serial Input Addon (v2.4)
-│   └── firmware/             # 커스텀 보드 정의 (Waveshare RP2040-Zero)
+├── rp2040/                # RP2040 / GP2040-CE
+│   ├── addons/                # Serial Input Addon (v2.4)
+│   └── firmware/              # Custom board definition (Waveshare RP2040-Zero)
 │
-└── docs/                  # 회로도 · 핀맵 · 문서
+└── docs/                  # Circuit diagrams, pinmaps, reference HTML
 ```
 
 ---
 
-## 각 모듈
+## Modules
 
-### `firmware/MegaKey_AVR128DB64` — 메인 보드 (v4.0)
+### `firmware/MegaKey_AVR128DB64` — main board (v4.0)
 
-AVR128DB64-I/PT 기반 아케이드 컨트롤러 보드.
+AVR128DB64-I/PT based arcade controller board.
 
-**하드웨어**
-- AVR128DB64 (TQFP-64, 24MHz 내장 OSCHF, 5V)
-- 74HC595 × 2 (KVM LED · STATUS · MUX 제어)
-- GP2040-CE × 2 (Serial2/Serial3 단방향 전송)
-- JVS IO (USART0, TCB1 Sense 신호)
-- HDMI 스위치 IR (NEC, TCB0 PWM on PA2)
+**Hardware**
+- AVR128DB64 (TQFP-64, 24 MHz internal OSCHF, 5 V)
+- 74HC595 × 2 (KVM LEDs · status LEDs · MUX control)
+- GP2040-CE × 2 (one-way transmission over Serial2/Serial3)
+- JVS IO (USART0, TCB1 sense signal)
+- HDMI switch IR (NEC, TCB0 PWM on PA2)
 
-**컴파일 환경**
+**Build environment**
 - Arduino IDE + [DxCore](https://github.com/SpenceKonde/DxCore)
-- Board: AVR DB-series → AVR128DB64 (Reset: GPIO PF6, Clock 24MHz internal)
-- Libraries: [JVSIO](https://github.com/twitter/jvsio) · IRremote v4.x
+- Board: AVR DB-series → AVR128DB64 (Reset: GPIO PF6, Clock 24 MHz internal)
+- Libraries: [JVSIO](https://github.com/twitter/jvsio) (bundled in `jvsio/`) · IRremote v4.x
 
-### `firmware/MegaKey_IO` — 이전 세대 보드
+### `firmware/MegaKey_IO` — previous-generation board
 
-ATmega32U4 (Pro Micro) 기반 JVS IO 컨트롤러. `jvsio/` 서브디렉터리에 라이브러리 소스를 포함합니다.
+ATmega32U4 (Pro Micro) based JVS IO controller. The `jvsio/` subdirectory contains the library source.
 
-### `firmware/MultiSourceController` — 멀티소스 → JAMMA
+### `firmware/MultiSourceController` — multi-source → JAMMA
 
-CXA2025AS + 74HC4052 + LM1881 컨트롤러. 입력: 컴포지트 · S-Video · VGA 15kHz → 출력: JAMMA RGB. OLED(SSD1306) UI.
+CXA2025AS + 74HC4052 + LM1881 controller. Inputs: composite · S-Video · VGA 15kHz → Output: JAMMA RGB. OLED (SSD1306) UI.
 
-### `firmware/PowerController` — 전원 시퀀스 제어기
+### `firmware/PowerController` — power sequence controller
 
-### `firmware/IR_SignalAnalyzer` — IR 신호 분석 유틸
+### `firmware/IR_SignalAnalyzer` — IR signal analysis utility
 
-HDMI 스위치 제어용 NEC IR 신호를 디코딩·분석하는 진단 스케치.
+Diagnostic sketch that decodes and analyzes the NEC IR signals used to drive the HDMI switch.
 
 ### `rp2040/addons` — GP2040-CE Serial Input Addon (v2.4)
 
-RP2040 제로 보드에서 Serial(UART)로 입력을 받아 Gamepad HID로 중계하는 GP2040-CE 애드온.
+GP2040-CE add-on that receives input over UART on an RP2040-Zero and relays it as Gamepad HID.
 
-> ⚠️ **필수 설정**: Display Addon · PlayerLEDAddon 비활성화 (I2C · WS2812 PIO 충돌 방지)
+> ⚠️ **Required settings**: disable the Display Addon and PlayerLEDAddon (to avoid I2C and WS2812 PIO conflicts).
 
-### `rp2040/firmware/BoardConfig.h` — Waveshare RP2040-Zero 보드 정의
+### `rp2040/firmware/BoardConfig.h` — Waveshare RP2040-Zero board definition
 
-GP2040-CE 커스텀 보드 핀맵.
+Custom GP2040-CE board pinmap.
 
 ---
 
-## 라이선스
+## Documentation
 
-각 서브모듈의 SPDX 헤더를 따릅니다. 별도 표기가 없는 소스는 MIT입니다.
+- `docs/complete_circuit_diagram.html` — IR LED driver & USB multiplexer circuit, BOM, pin map, channel truth table, PCB layout guidelines.
+- `docs/sn74cb3q3253_pinmap.html` — SN74CB3Q3253PW detailed pinmap and wiring for the two MUX chips.
+
+---
+
+## License
+
+Each module follows its own SPDX header. Where no notice is present, the source is MIT.

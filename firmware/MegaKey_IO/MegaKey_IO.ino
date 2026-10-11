@@ -2,8 +2,8 @@
 // Version: 3.4 - Fixed Timer Conflict (JVS vs IR)
 // Hardware: Arduino Mega 2560 PRO
 
-// ★★★ [중요] IRremote가 Timer 3을 사용하도록 강제 설정 (JVS의 Timer 2와 충돌 방지) ★★★
-// 이 정의는 반드시 <IRremote.h>를 include하기 전에 선언되어야 합니다.
+//    [IMPORTANT] Force IRremote to use Timer 3 (prevents conflict with JVS Timer 2)
+// This definition must be declared before including <IRremote.h>.
 #define IR_USE_AVR_TIMER3 
 
 #include "jvsio/JVSIO.h"
@@ -13,13 +13,13 @@
 
 #pragma GCC optimize("O3")
 
-// ========== 시스템 상수 ==========
+// ========== SYSTEM CONSTANTS ==========
 #define FIRMWARE_VERSION "3.4-TIMER_FIX"
 #define SERIAL_SPEED 250000
 #define LOOP_INTERVAL_US 1000UL  // 1ms (1000Hz)
 #define COIN_DEBOUNCE_MS 50
 
-// ========== 동작 모드 ==========
+// ========== OPERATION MODES ==========
 #define MODE_KEYBOARD    0
 #define MODE_XINPUT      1
 #define MODE_SWITCH      2
@@ -30,14 +30,14 @@
 #define MODE_JVS         7
 #define MODE_DREAMCAST   8
 
-// ========== KVM 채널 ==========
+// ========== KVM CHANNELS ==========
 #define KVM_CH1          1
 #define KVM_CH2          2
 #define KVM_CH3          3
 #define KVM_CH4          4
 #define KVM_CH5_JAMMA    5
 
-// ========== 버튼 비트 위치 ==========
+// ========== BUTTON BIT POSITIONS ==========
 #define BIT_SELECT  0
 #define BIT_HOME    1
 #define BIT_START   2
@@ -58,25 +58,25 @@
 #define BIT_TURBO   17
 #define BIT_TOUCH   18
 
-// ========== 통신 프로토콜 ==========
+// ========== COMMUNICATION PROTOCOL ==========
 #define BINARY_HEADER    0xAA
 #define BINARY_FOOTER    0x55
 
-// ========== 하드웨어 핀 정의 ==========
+// ========== HARDWARE PIN DEFINITIONS ==========
 
-// === JVS 인터페이스 ===
+// === JVS INTERFACE ===
 #define JVS_IO_PIN       41     // D41
 
-// === IR LED 제어 핀 ===
-#define IR_LED_PIN       3      // D3 (Timer 3 사용 핀)
+// === IR LED CONTROL PIN ===
+#define IR_LED_PIN       3      // D3 (pin using Timer 3)
 
-// === USB 멀티플렉서 ===
+// === USB MULTIPLEXER ===
 #define MUX1_SEL_PIN     A10    
 #define MUX1_OE_PIN      A12    
 #define MUX2_SEL_PIN     A14    
 #define MUX2_OE_PIN      A15    
 
-// === KVM 상태 LED ===
+// === KVM STATUS LEDs ===
 #define KVM1_LED_PIN     5      
 #define KVM2_LED_PIN     7      
 #define KVM3_LED_PIN     11     
@@ -84,23 +84,23 @@
 #define KVM5_LED_PIN     17     
 #define STATUS_LED_PIN   13     
 
-// === RP2040 통신 ===
+// === RP2040 COMMUNICATION ===
 #define RP2040_1P_TX_PIN 16     
 #define RP2040_2P_TX_PIN 14     
 
-// === KVM 채널 선택 버튼 ===
+// === KVM CHANNEL SELECT BUTTONS ===
 #define CHK_KVM1_PIN     2      
 #define CHK_KVM2_PIN     4      
 #define CHK_KVM3_PIN     6      
 #define CHK_KVM4_PIN     8      
 #define CHK_KVM5_PIN     10     
 
-// === 설정 스위치 ===
+// === CONFIG SWITCHES ===
 #define CHK_JOYSTICK_PIN 39     
 #define CHK_JVS_PIN      41     
 #define CHK_SWAPSTICK_PIN A8    
 
-// === Player 1 버튼 ===
+// === Player 1 BUTTONS ===
 #define P1_START_PIN     21     
 #define P1_SELECT_PIN    23     
 #define P1_HOME_PIN      25     
@@ -121,7 +121,7 @@
 #define P1_LANAL_PIN     35     
 #define P1_RANAL_PIN     37     
 
-// === Player 2 버튼 ===
+// === Player 2 BUTTONS ===
 #define P2_START_PIN     44     
 #define P2_SELECT_PIN    46     
 #define P2_HOME_PIN      48     
@@ -142,7 +142,7 @@
 #define P2_LANAL_PIN     A4     
 #define P2_RANAL_PIN     A6     
 
-// ========== JVS 관련 클래스 (Timer 2 사용) ==========
+// ========== JVS CLASSES (uses Timer 2) ==========
 class MegaJVSDataClient : public JVSIO::DataClient {
   int available() override { return Serial.available(); }
   void setMode(int mode) override {
@@ -168,7 +168,7 @@ class MegaJVSDataClient : public JVSIO::DataClient {
 
 class MegaJVSSenseClient : public JVSIO::SenseClient {
   void begin() override {
-    // Timer 2 설정 (JVS Sense 신호용) - IRremote와 충돌나던 부분
+    // Timer 2 setup (for JVS Sense signal) - this was the part that conflicted with IRremote
     TCCR2A = 0b00010010;
     OCR2A = 1;
     TCCR2B = 0b00000001;
@@ -191,7 +191,7 @@ MegaJVSSenseClient jvs_sense;
 MegaJVSLedClient jvs_led;
 JVSIO io(&jvs_data, &jvs_sense, &jvs_led);
 
-// ========== 데이터 구조체 ==========
+// ========== DATA STRUCTS ==========
 struct ButtonMapping {
   uint8_t pin;
   uint8_t bit_index;
@@ -251,11 +251,11 @@ uint16_t coin_count[2];
 bool coin_prev_state[2];
 unsigned long coin_time[2];
 
-// ========== 함수 선언 ==========
+// ========== FUNCTION DECLARATIONS ==========
 void sendNECCommand(uint32_t command);
 void sendHDMISwitchCommand(uint8_t channel);
 
-// ========== CRC8 계산 ==========
+// ========== CRC8 COMPUTATION ==========
 uint8_t calculateCRC8(const uint8_t *data, uint8_t len) {
   uint8_t crc = 0x00;
   while (len--) {
@@ -270,7 +270,7 @@ uint8_t calculateCRC8(const uint8_t *data, uint8_t len) {
   return crc;
 }
 
-// ========== 디버깅 LED 플래시 ==========
+// ========== DEBUG LED FLASH ==========
 void debugFlash(uint8_t count) {
   for (uint8_t i = 0; i < count; i++) {
     digitalWrite(STATUS_LED_PIN, HIGH);
@@ -280,9 +280,9 @@ void debugFlash(uint8_t count) {
   }
 }
 
-// ========== KVM 채널 업데이트 ==========
+// ========== KVM CHANNEL UPDATE ==========
 void updateKVMChannel(uint8_t channel) {
-  // USB MUX 제어
+  // USB MUX control
   switch (channel) {
     case KVM_CH1:
       digitalWrite(MUX1_SEL_PIN, LOW); digitalWrite(MUX1_OE_PIN, LOW); digitalWrite(MUX2_OE_PIN, HIGH); break;
@@ -296,11 +296,11 @@ void updateKVMChannel(uint8_t channel) {
       digitalWrite(MUX1_OE_PIN, HIGH); digitalWrite(MUX2_OE_PIN, HIGH); break;
   }
   
-  // HDMI IR 전송
+  // HDMI IR transmit
   sendHDMISwitchCommand(channel);
 }
 
-// ========== IR 전송 함수 ==========
+// ========== IR TRANSMIT FUNCTION ==========
 void sendHDMISwitchCommand(uint8_t channel) {
   uint32_t nec_command = 0;
   switch (channel) {
@@ -317,34 +317,34 @@ void sendHDMISwitchCommand(uint8_t channel) {
 }
 
 void sendNECCommand(uint32_t command) {
-  // IRremote v3/v4용 전송 코드 (Timer 3 사용)
-  // sendNECRaw는 (RawData, RepeatCount) 형식을 가집니다.
+  // Transmit code for IRremote v3/v4 (uses Timer 3)
+  // sendNECRaw takes the form (RawData, RepeatCount).
   IrSender.sendNECRaw(command, 0);
 }
 
-// ========== 모드 체크 및 입력 처리 ==========
+// ========== MODE CHECK & INPUT HANDLING ==========
 void checkInitialMode() {
   bool jvs_low = (digitalRead(CHK_JVS_PIN) == LOW);
   bool joystick_low = (digitalRead(CHK_JOYSTICK_PIN) == LOW);
   
-  // 1. 둘 다 켰을 때 -> 키보드 (유지보수용)
+  // 1. Both ON -> keyboard (for maintenance)
   if (jvs_low && joystick_low) {
     system_state.selected_mode = MODE_KEYBOARD;
     system_state.jvs_mode_active = false;
     system_state.mode_locked = true;
   } 
-  // 2. JVS만 켰을 때 -> JVS 모드
+  // 2. JVS only ON -> JVS mode
   else if (jvs_low) {
     system_state.selected_mode = MODE_JVS;
     system_state.jvs_mode_active = true;
     system_state.mode_locked = true;
   }
-  // 3. [추가됨] 조이스틱만 켰을 때 -> 조이스틱 모드 (XInput 등)
+  // 3. [ADDED] Joystick only ON -> joystick mode (XInput, etc.)
   else if (joystick_low) {
-    // 부팅 시 버튼 눌림을 확인하여 모드 결정 (기본은 XInput)
-    system_state.p1_buttons = scanPlayerButtons(p1_buttons); // 버튼 한번 읽기
+    // Determine mode by checking held buttons at boot (default XInput)
+    system_state.p1_buttons = scanPlayerButtons(p1_buttons); // read buttons once
     
-    // 버튼 조합에 따른 모드 선택 로직 (기존 checkModeSelection 로직 활용)
+    // Mode-selection logic based on button combination (reuses existing checkModeSelection logic)
     if (system_state.p1_buttons & (1 << BIT_X)) system_state.selected_mode = MODE_DREAMCAST;
     else if (system_state.p1_buttons & (1 << BIT_Y)) system_state.selected_mode = MODE_PS3;
     else if (system_state.p1_buttons & (1 << BIT_A)) system_state.selected_mode = MODE_PS4;
@@ -352,16 +352,16 @@ void checkInitialMode() {
     else if (system_state.p1_buttons & (1 << BIT_LB)) system_state.selected_mode = MODE_KEYBOARD;
     else if (system_state.p1_buttons & (1 << BIT_RB)) system_state.selected_mode = MODE_PS5;
     else if (system_state.p1_buttons & (1 << BIT_LT)) system_state.selected_mode = MODE_XBOX;
-    else system_state.selected_mode = MODE_XINPUT; // 아무 버튼 안 누르면 기본 XInput
+    else system_state.selected_mode = MODE_XINPUT; // default to XInput if no button pressed
 
     system_state.jvs_mode_active = false;
-    system_state.mode_locked = true; // ★ 중요: 모드 확정 (LED 계속 켜짐)
+    system_state.mode_locked = true; // ★ IMPORTANT: mode confirmed (LED stays ON)
   }
-  // 4. 둘 다 껐을 때 -> 키보드 모드 (기본 상태)
+  // 4. Both OFF -> keyboard mode (default state)
   else {
-    system_state.selected_mode = MODE_KEYBOARD; // 원하시는 대로 키보드로 설정
+    system_state.selected_mode = MODE_KEYBOARD; // set to keyboard as desired
     system_state.jvs_mode_active = false;
-    system_state.mode_locked = false; // 대기 상태 (빨리 깜빡임)
+    system_state.mode_locked = false; // standby state (fast blink)
   }
 }
 
@@ -370,7 +370,7 @@ void checkModeSelection() {
   
   bool joystick_current = digitalRead(CHK_JOYSTICK_PIN);
   if (system_state.chk_joystick_prev == HIGH && joystick_current == LOW) {
-    // 모드 변경 로직 (버튼 조합)
+    // mode-change logic (button combination)
     uint16_t p1 = system_state.p1_buttons;
     if (p1 & (1 << BIT_X)) system_state.selected_mode = MODE_DREAMCAST;
     else if (p1 & (1 << BIT_Y)) system_state.selected_mode = MODE_PS3;
@@ -409,7 +409,7 @@ void scanAllInputs() {
   system_state.analog_checks.p2_lanl = (digitalRead(P2_LANAL_PIN) == LOW);
   system_state.analog_checks.p2_ranl = (digitalRead(P2_RANAL_PIN) == LOW);
   
-  // KVM 버튼 스캔 (Falling Edge Detection)
+  // KVM button scan (Falling Edge Detection)
   for (uint8_t i = 0; i < 5; i++) {
     bool currentState = digitalRead(kvm_pins[i]);
 
@@ -427,7 +427,7 @@ void scanAllInputs() {
     kvm_button_prev_state[i] = currentState;
   }
   
-  // 코인 처리
+  // coin handling
   unsigned long current_time = millis();
   bool p1_coin = (system_state.p1_buttons & (1 << BIT_SELECT)) != 0;
   if (p1_coin && !coin_prev_state[0]) {
@@ -473,7 +473,7 @@ void updateStatusLED() {
 void sendToRP2040() {
   CompactMessage msg;
   
-  // ★ uint32_t로 확장: BIT_L3(15), BIT_R3(16), BIT_TURBO(17), BIT_TOUCH(18)까지 전송 가능
+  // ★ Extended to uint32_t: can transmit up to BIT_L3(15), BIT_R3(16), BIT_TURBO(17), BIT_TOUCH(18)
   uint32_t p1_data = system_state.swap_stick ? system_state.p2_buttons : system_state.p1_buttons;
   uint32_t p2_data = system_state.swap_stick ? system_state.p1_buttons : system_state.p2_buttons;
   
@@ -583,34 +583,34 @@ void processJVSCommands() {
   }
 }
 
-// ========== 초기화 ==========
+// ========== INITIALIZATION ==========
 void setup() {
-  // 1. SPI 완전 비활성화 (더 강력하게)
-  SPCR = 0;                     // SPI Control Register 끄기
-  SPSR = 0;                     // SPI Status Register 초기화
-  PRR0 |= (1 << PRSPI);         // SPI 전원 완전 차단
+  // 1. Fully disable SPI (more forcefully)
+  SPCR = 0;                     // turn off SPI Control Register
+  SPSR = 0;                     // reset SPI Status Register
+  PRR0 |= (1 << PRSPI);         // completely cut SPI power
   
-  // 2. SPI 핀들을 명시적으로 GPIO로 설정
-  // 핀 50(PB3), 51(PB2), 52(PB1), 53(PB0)
-  DDRB &= ~0x0F;                // PB0-PB3를 입력으로
-  PORTB |= 0x0F;                // 내부 풀업 활성화
+  // 2. Explicitly set SPI pins as GPIO
+  // pins 50(PB3), 51(PB2), 52(PB1), 53(PB0)
+  DDRB &= ~0x0F;                // set PB0-PB3 as inputs
+  PORTB |= 0x0F;                // enable internal pull-ups
   
-  // 3. 핀 48(PL1) 별도 설정
-  DDRL &= ~(1 << PL1);          // PL1을 입력으로
-  PORTL |= (1 << PL1);          // PL1 풀업 활성화
+  // 3. Configure pin 48(PL1) separately
+  DDRL &= ~(1 << PL1);          // set PL1 as input
+  PORTL |= (1 << PL1);          // enable PL1 pull-up
   
-  // JVSIO 초기화 (Timer 2 설정 포함)
+  // JVSIO init (includes Timer 2 setup)
   delay(10);
   io.begin();
   
-  // 시리얼 통신
+  // serial communication
   Serial2.begin(SERIAL_SPEED);
   Serial3.begin(SERIAL_SPEED);
   
-  UCSR2B &= ~(1 << RXEN2);  // Serial2 수신 비활성화 -> 핀 17 (KVM5 LED) 해방
-  UCSR3B &= ~(1 << RXEN3);  // Serial3 수신 비활성화 -> 핀 15 (KVM4 LED) 해방
+  UCSR2B &= ~(1 << RXEN2);  // disable Serial2 RX -> frees pin 17 (KVM5 LED)
+  UCSR3B &= ~(1 << RXEN3);  // disable Serial3 RX -> frees pin 15 (KVM4 LED)
 
-  // 핀 모드 설정
+  // pin mode setup
   pinMode(CHK_JOYSTICK_PIN, INPUT_PULLUP);
   pinMode(CHK_JVS_PIN, INPUT_PULLUP);
   pinMode(CHK_SWAPSTICK_PIN, INPUT_PULLUP);
@@ -636,13 +636,13 @@ void setup() {
   digitalWrite(MUX1_OE_PIN, HIGH);
   digitalWrite(MUX2_OE_PIN, HIGH);
 
-  // IR 초기화 (D3 = Timer 3 사용)
-  // [중요] IR_USE_AVR_TIMER3 덕분에 Timer 2(JVS)를 건드리지 않음
+  // IR init (D3 = uses Timer 3)
+  // [IMPORTANT] Thanks to IR_USE_AVR_TIMER3, Timer 2 (JVS) is not touched
   IrSender.begin(IR_LED_PIN, ENABLE_LED_FEEDBACK);
   
   TCCR3A &= ~((1 << COM3A1) | (1 << COM3A0) | (1 << COM3B1) | (1 << COM3B0));
   
-  // 버튼 핀 초기화
+  // button pin init
   for (uint8_t i = 0; i < 17; i++) {
     ButtonMapping btn;
     memcpy_P(&btn, &p1_buttons[i], sizeof(ButtonMapping));
@@ -653,7 +653,7 @@ void setup() {
 
   pinMode(JVS_IO_PIN, INPUT_PULLUP);
   
-  // 상태 초기화
+  // state init
   memset(&system_state, 0, sizeof(system_state));
   system_state.chk_joystick_prev = HIGH;
   system_state.kvm_channel = KVM_CH1;
@@ -666,7 +666,7 @@ void setup() {
   checkInitialMode();
   updateKVMChannel(system_state.kvm_channel);
   
-  // 초기화 완료 알림
+  // init-complete indication
   debugFlash(3);
 }
 
@@ -675,7 +675,7 @@ void updateKVMLEDs() {
 
   uint8_t ch = system_state.kvm_channel;
   
-  // 타이머 간섭 방지를 위해 매번 핀 모드를 확실히 설정 (안전장치)
+  // Set pin mode definitively every time to prevent timer interference (safety measure)
   pinMode(KVM1_LED_PIN, OUTPUT);
   
   digitalWrite(KVM1_LED_PIN, (ch == KVM_CH1) ? HIGH : LOW);
@@ -685,11 +685,11 @@ void updateKVMLEDs() {
   digitalWrite(KVM5_LED_PIN, (ch == KVM_CH5_JAMMA) ? HIGH : LOW);
 }
 
-// ========== 메인 루프 ==========
+// ========== MAIN LOOP ==========
 void loop() {
   updateKVMLEDs();
 
-  // 1ms 루프 간격 제어
+  // 1ms loop-interval control
   static unsigned long next_time_us = 0;
   unsigned long current_us = micros();
   if (current_us < next_time_us) return;
@@ -697,46 +697,46 @@ void loop() {
   
   system_state.frame_count++;
  
-  // 1. 모든 입력 스캔
+  // 1. Scan all inputs
   scanAllInputs();
   
-  // 2. 스위치 상태 확인 (LOW가 켜진 것)
+  // 2. Check switch states (LOW means ON)
   bool jvs_switch_now = (digitalRead(CHK_JVS_PIN) == LOW);
   bool joystick_switch_now = (digitalRead(CHK_JOYSTICK_PIN) == LOW);
   
-  // 3. 실시간 모드 변경 로직
+  // 3. Real-time mode-change logic
   if (jvs_switch_now && joystick_switch_now) {
-    // 둘 다 켜짐 -> 키보드 모드 (강제 고정)
+    // both ON -> keyboard mode (forced lock)
     system_state.selected_mode = MODE_KEYBOARD;
     system_state.mode_locked = true;
   } 
   else if (jvs_switch_now) {
-    // JVS만 켜짐 -> JVS 모드
+    // JVS only ON -> JVS mode
     system_state.selected_mode = MODE_JVS;
     system_state.mode_locked = true;
   } 
   else if (system_state.mode_locked && !jvs_switch_now && !joystick_switch_now) {
-    // 스위치를 껐을 때 (잠금 해제) -> 키보드 모드로 복귀 (빨리 깜빡임)
+    // when switches turned OFF (unlock) -> return to keyboard mode (fast blink)
     system_state.mode_locked = false;
-    system_state.selected_mode = MODE_KEYBOARD; // ★ 여기를 KEYBOARD로 변경함
+    system_state.selected_mode = MODE_KEYBOARD; // ★ changed this to KEYBOARD
   }
   
-  // 4. 조이스틱 모드 선택 (잠금 해제 상태일 때만 동작)
+  // 4. Joystick mode selection (only acts when unlocked)
   if (!system_state.mode_locked) {
     checkModeSelection();
   }
   
-  // 5. JVS 활성화 여부 갱신
+  // 5. Update JVS-active flag
   system_state.jvs_mode_active = (system_state.selected_mode == MODE_JVS);
   
-  // 6. LED 상태 업데이트
+  // 6. Update LED state
   updateStatusLED();
   
-  // 7. JVS 통신 처리
+  // 7. Handle JVS communication
   if (system_state.jvs_mode_active) {
     processJVSCommands();
   }
   
-  // 8. RP2040으로 데이터 전송 (항상 수행)
+  // 8. Send data to RP2040 (always performed)
   sendToRP2040();
 }

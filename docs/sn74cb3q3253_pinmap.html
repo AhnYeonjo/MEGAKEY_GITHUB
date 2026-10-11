@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -86,11 +86,11 @@
 </head>
 <body>
     <div class="container">
-        <h1>🎯 SN74CB3Q3253PW 상세 핀맵 및 연결도</h1>
+        <h1>🎯 SN74CB3Q3253PW Detailed Pinmap and  wiring diagram</h1>
         
-        <!-- MUX 칩 1 핀맵 -->
+        <!-- MUX chip 1  -->
         <div class="chip-section">
-            <h2 style="color: #667eea;">📍 MUX #1 (CH1/CH2 제어) - 상세 핀맵</h2>
+            <h2 style="color: #667eea;">📍 MUX #1 (CH1/CH2 control) — Detailed Pinmap</h2>
             <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
                 <!-- IC Package -->
                 <rect x="250" y="100" width="300" height="300" fill="#2c3e50" stroke="#000" stroke-width="3" rx="10"/>
@@ -226,14 +226,14 @@
                 
                 <!-- Legend -->
                 <text x="400" y="460" text-anchor="middle" font-size="12" fill="#666">
-                    SEL=0: PC1 활성 (Y0/Z0) | SEL=1: PC2 활성 (Y1/Z1) | OE=0: 칩 활성, OE=1: 칩 비활성
+                    SEL=0: PC1 active (Y0/Z0) | SEL=1: PC2 active (Y1/Z1) | OE=0: chip active, OE=1: chip inactive
                 </text>
             </svg>
         </div>
         
-        <!-- MUX 칩 2 핀맵 -->
+        <!-- MUX chip 2  -->
         <div class="chip-section">
-            <h2 style="color: #764ba2;">📍 MUX #2 (CH3/CH4 제어) - 상세 핀맵</h2>
+            <h2 style="color: #764ba2;">📍 MUX #2 (CH3/CH4 control) — Detailed Pinmap</h2>
             <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
                 <!-- IC Package -->
                 <rect x="250" y="100" width="300" height="300" fill="#34495e" stroke="#000" stroke-width="3" rx="10"/>
@@ -358,132 +358,132 @@
                 
                 <!-- Legend -->
                 <text x="400" y="460" text-anchor="middle" font-size="12" fill="#666">
-                    SEL=0: PC3 활성 (Y0/Z0) | SEL=1: PC4 활성 (Y1/Z1) | OE=0: 칩 활성, OE=1: 칩 비활성
+                    SEL=0: PC3 active (Y0/Z0) | SEL=1: PC4 active (Y1/Z1) | OE=0: chip active, OE=1: chip inactive
                 </text>
             </svg>
         </div>
         
-        <!-- 핀 기능 테이블 -->
+        <!-- Pin Function Description -->
         <div class="chip-section">
-            <h2 style="color: #2c3e50;">📋 핀 기능 상세 설명</h2>
+            <h2 style="color: #2c3e50;">📋 Pin Function Description</h2>
             <table class="pin-table">
                 <thead>
                     <tr>
-                        <th>핀 번호</th>
-                        <th>핀 이름</th>
-                        <th>기능</th>
-                        <th>연결</th>
-                        <th>설명</th>
+                        <th>Pin #</th>
+                        <th>Pin Name</th>
+                        <th>Function</th>
+                        <th>Connection</th>
+                        <th>Description</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td><code>1</code></td>
                         <td>S (SEL)</td>
-                        <td>채널 선택</td>
+                        <td>Channel select</td>
                         <td>Arduino A7/A9</td>
-                        <td>0=Y0/Z0 선택, 1=Y1/Z1 선택</td>
+                        <td>0=select Y0/Z0, 1=select Y1/Z1</td>
                     </tr>
                     <tr>
                         <td><code>2, 3</code></td>
                         <td>1Y0, 1Z0</td>
-                        <td>채널 0 출력</td>
+                        <td>Channel 0 output</td>
                         <td>PC1/PC3</td>
-                        <td>D+/D- 차동 신호 (SEL=0일 때)</td>
+                        <td>D+/D- differential signal (when SEL=0)</td>
                     </tr>
                     <tr>
                         <td><code>4, 5</code></td>
                         <td>2Y0, 2Z0</td>
-                        <td>예비</td>
+                        <td>Spare</td>
                         <td>NC</td>
-                        <td>듀얼 채널 (미사용)</td>
+                        <td>Dual channel (unused)</td>
                     </tr>
                     <tr>
                         <td><code>6, 7</code></td>
                         <td>2Z1, 2Y1</td>
-                        <td>예비</td>
+                        <td>Spare</td>
                         <td>NC</td>
-                        <td>듀얼 채널 (미사용)</td>
+                        <td>Dual channel (unused)</td>
                     </tr>
                     <tr>
                         <td><code>8</code></td>
                         <td>GND</td>
-                        <td>그라운드</td>
+                        <td>Ground</td>
                         <td>Arduino GND</td>
-                        <td>공통 그라운드</td>
+                        <td>Common ground</td>
                     </tr>
                     <tr>
                         <td><code>9, 10</code></td>
                         <td>1Y1, 1Z1</td>
-                        <td>채널 1 출력</td>
+                        <td>Channel 1 output</td>
                         <td>PC2/PC4</td>
-                        <td>D+/D- 차동 신호 (SEL=1일 때)</td>
+                        <td>D+/D- differential signal (when SEL=1)</td>
                     </tr>
                     <tr>
                         <td><code>11, 12</code></td>
                         <td>2B, 2A</td>
-                        <td>예비 입력</td>
+                        <td>Spare input</td>
                         <td>NC</td>
-                        <td>듀얼 채널 (미사용)</td>
+                        <td>Dual channel (unused)</td>
                     </tr>
                     <tr>
                         <td><code>13, 14</code></td>
                         <td>1A, 1B</td>
-                        <td>공통 입력</td>
+                        <td>Common input</td>
                         <td>USB Hub</td>
-                        <td>D+/D- 입력 신호</td>
+                        <td>D+/D- input signal</td>
                     </tr>
                     <tr>
                         <td><code>15</code></td>
                         <td>OE</td>
-                        <td>출력 활성화</td>
+                        <td>Output enable</td>
                         <td>Arduino A6/A8</td>
-                        <td>0=출력 활성, 1=Hi-Z (차단)</td>
+                        <td>0=output active, 1=Hi-Z (blocked)</td>
                     </tr>
                     <tr>
                         <td><code>16</code></td>
                         <td>VDD</td>
-                        <td>전원</td>
+                        <td>Power</td>
                         <td>3.3V</td>
-                        <td>3.3V 전원 공급</td>
+                        <td>3.3V power supply</td>
                     </tr>
                 </tbody>
             </table>
         </div>
         
-        <!-- 연결 요약 -->
+        <!-- connection  -->
         <div class="connection-grid">
             <div class="chip-section">
-                <h3 style="color: #667eea;">🔌 MUX #1 연결</h3>
+                <h3 style="color: #667eea;">🔌 MUX #1 Connection</h3>
                 <ul style="line-height: 1.8;">
-                    <li><strong>제어:</strong> A7(SEL), A6(OE)</li>
-                    <li><strong>입력:</strong> USB Hub D+/D- → Pin 13/14</li>
-                    <li><strong>출력1:</strong> Pin 2/3 → PC1</li>
-                    <li><strong>출력2:</strong> Pin 9/10 → PC2</li>
-                    <li><strong>전원:</strong> 3.3V + 0.1µF 캐패시터</li>
+                    <li><strong>Control:</strong> A7(SEL), A6(OE)</li>
+                    <li><strong>Input:</strong> USB hub D+/D- → pins 13/14</li>
+                    <li><strong>Output 1:</strong> pins 2/3 → PC1</li>
+                    <li><strong>Output 2:</strong> pins 9/10 → PC2</li>
+                    <li><strong>Power:</strong> 3.3V + 0.1µF capacitor</li>
                 </ul>
             </div>
             
             <div class="chip-section">
-                <h3 style="color: #764ba2;">🔌 MUX #2 연결</h3>
+                <h3 style="color: #764ba2;">🔌 MUX #2 Connection</h3>
                 <ul style="line-height: 1.8;">
-                    <li><strong>제어:</strong> A9(SEL), A8(OE)</li>
-                    <li><strong>입력:</strong> USB Hub D+/D- → Pin 13/14</li>
-                    <li><strong>출력1:</strong> Pin 2/3 → PC3</li>
-                    <li><strong>출력2:</strong> Pin 9/10 → PC4</li>
-                    <li><strong>전원:</strong> 3.3V + 0.1µF 캐패시터</li>
+                    <li><strong>Control:</strong> A9(SEL), A8(OE)</li>
+                    <li><strong>Input:</strong> USB hub D+/D- → pins 13/14</li>
+                    <li><strong>Output 1:</strong> pins 2/3 → PC3</li>
+                    <li><strong>Output 2:</strong> pins 9/10 → PC4</li>
+                    <li><strong>Power:</strong> 3.3V + 0.1µF capacitor</li>
                 </ul>
             </div>
         </div>
         
         <div class="note">
-            <strong>💡 중요 참고사항:</strong>
+            <strong>💡 Key Notes:</strong>
             <ul style="margin: 10px 0; padding-left: 20px;">
-                <li>각 MUX 칩은 독립적으로 동작하며, 하나만 활성화됨</li>
-                <li>캐패시터는 VDD 핀(16번)과 GND 핀(8번) 사이에 직접 연결</li>
-                <li>USB 신호선은 차동 페어로 배선 (D+/D- 길이 매칭)</li>
-                <li>미사용 핀(2Y0, 2Z0, 2Y1, 2Z1)은 플로팅 상태로 둬도 무방</li>
-                <li>CH5 선택 시 두 칩 모두 OE=1로 설정하여 USB 완전 차단</li>
+                <li>Each MUX chip operates independently and only one is enabled at a time.</li>
+                <li>Connect the capacitor directly between the VDD pin (16) and the GND pin (8).</li>
+                <li>Route the USB signal lines as differential pairs (D+/D- length matching).</li>
+                <li>The unused pins (2Y0, 2Z0, 2Y1, 2Z1) may be left floating.</li>
+                <li>When CH5 is selected, set OE=1 on both chips to fully block USB.</li>
             </ul>
         </div>
     </div>

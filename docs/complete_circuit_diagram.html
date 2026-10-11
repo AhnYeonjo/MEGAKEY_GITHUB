@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -90,11 +90,11 @@
 </head>
 <body>
     <div class="container">
-        <h1>🔌 MegaKey IR LED & USB 멀티플렉서 완전 회로도</h1>
+        <h1>🔌 MegaKey IR LED & USB Multiplexer Complete Circuit Diagram</h1>
         
-        <!-- IR LED 회로 섹션 -->
+        <!-- IR LED circuit  -->
         <div class="circuit-section">
-            <div class="section-title">📡 IR LED 송신 회로</div>
+            <div class="section-title">📡 IR LED Transmitter Circuit</div>
             <svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
                 <!-- Arduino Mega -->
                 <rect x="50" y="100" width="120" height="80" fill="#2196F3" stroke="#000" stroke-width="2" rx="5"/>
@@ -152,9 +152,9 @@
             </svg>
         </div>
         
-        <!-- USB 멀티플렉서 회로 섹션 -->
+        <!-- USB Multiplexer circuit  -->
         <div class="circuit-section">
-            <div class="section-title">🔄 USB 멀티플렉서 회로 (SN74CB3Q3253PW)</div>
+            <div class="section-title">🔄 USB Multiplexer Circuit (SN74CB3Q3253PW)</div>
             <svg viewBox="0 0 900 500" xmlns="http://www.w3.org/2000/svg">
                 <!-- Arduino Mega Control Pins -->
                 <rect x="50" y="200" width="100" height="150" fill="#2196F3" stroke="#000" stroke-width="2" rx="5"/>
@@ -269,98 +269,98 @@
             </svg>
         </div>
         
-        <!-- 부품 목록 -->
+        <!-- Bill of Materials -->
         <div class="circuit-section">
-            <div class="section-title">📦 필요 부품 목록</div>
+            <div class="section-title">📦 Bill of Materials</div>
             <div class="component-list">
                 <div class="component-card">
-                    <h4>IR LED 회로</h4>
+                    <h4>IR LED Circuit</h4>
                     <ul style="margin: 10px 0; padding-left: 20px;">
                         <li>IR LED (940nm) × 1</li>
-                        <li>2N2222 NPN 트랜지스터 × 1</li>
-                        <li>저항 1kΩ × 1</li>
-                        <li>저항 100Ω × 1</li>
+                        <li>2N2222 NPN transistor × 1</li>
+                        <li>Resistor 1kΩ × 1</li>
+                        <li>Resistor 100Ω × 1</li>
                     </ul>
                 </div>
                 <div class="component-card">
-                    <h4>USB 멀티플렉서</h4>
+                    <h4>USB Multiplexer</h4>
                     <ul style="margin: 10px 0; padding-left: 20px;">
                         <li>SN74CB3Q3253PW × 2</li>
-                        <li>0.1µF 세라믹 캐패시터 × 2</li>
-                        <li>USB Type-A 포트 × 5</li>
-                        <li>USB Type-B 포트 × 1</li>
+                        <li>0.1µF ceramic capacitor × 2</li>
+                        <li>USB Type-A port × 5</li>
+                        <li>USB Type-B port × 1</li>
                     </ul>
                 </div>
                 <div class="component-card">
-                    <h4>선택 사항</h4>
+                    <h4>Optional</h4>
                     <ul style="margin: 10px 0; padding-left: 20px;">
-                        <li>TVS 다이오드 (ESD 보호)</li>
-                        <li>페라이트 비드 (노이즈 필터)</li>
-                        <li>LED 표시등 (상태 표시)</li>
+                        <li>TVS diodes (ESD protection)</li>
+                        <li>Ferrite beads (noise filter)</li>
+                        <li>Status LEDs (state indication)</li>
                     </ul>
                 </div>
             </div>
         </div>
         
-        <!-- 핀 연결 테이블 -->
+        <!-- Pin Connection Summary -->
         <div class="circuit-section">
-            <div class="section-title">🔗 핀 연결 요약</div>
+            <div class="section-title">🔗 Pin Connection Summary</div>
             <table class="pin-table">
                 <thead>
                     <tr>
-                        <th>Arduino 핀</th>
-                        <th>연결 대상</th>
-                        <th>기능</th>
-                        <th>비고</th>
+                        <th>Arduino Pin</th>
+                        <th>Target</th>
+                        <th>Function</th>
+                        <th>Notes</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td><code>D46</code></td>
                         <td>IR LED (via 2N2222)</td>
-                        <td>HDMI 스위처 제어</td>
-                        <td>NEC 프로토콜 38kHz</td>
+                        <td>HDMI switcher control</td>
+                        <td>NEC protocol 38kHz</td>
                     </tr>
                     <tr>
                         <td><code>A7 (61)</code></td>
                         <td>MUX1 SEL</td>
-                        <td>CH1/CH2 선택</td>
+                        <td>CH1/CH2 select</td>
                         <td>0=CH1, 1=CH2</td>
                     </tr>
                     <tr>
                         <td><code>A6 (60)</code></td>
                         <td>MUX1 OE</td>
-                        <td>칩1 활성화</td>
+                        <td>Chip 1 enable</td>
                         <td>Active LOW</td>
                     </tr>
                     <tr>
                         <td><code>A9 (63)</code></td>
                         <td>MUX2 SEL</td>
-                        <td>CH3/CH4 선택</td>
+                        <td>CH3/CH4 select</td>
                         <td>0=CH3, 1=CH4</td>
                     </tr>
                     <tr>
                         <td><code>A8 (62)</code></td>
                         <td>MUX2 OE</td>
-                        <td>칩2 활성화</td>
+                        <td>Chip 2 enable</td>
                         <td>Active LOW</td>
                     </tr>
                 </tbody>
             </table>
         </div>
         
-        <!-- 채널 선택 로직 -->
+        <!-- Channel Selection Truth Table -->
         <div class="circuit-section">
-            <div class="section-title">⚙️ 채널 선택 진리표</div>
+            <div class="section-title">⚙️ Channel Selection Truth Table</div>
             <table class="pin-table">
                 <thead>
                     <tr>
-                        <th>채널</th>
+                        <th>Channel</th>
                         <th>MUX1_SEL (A7)</th>
                         <th>MUX1_OE (A6)</th>
                         <th>MUX2_SEL (A9)</th>
                         <th>MUX2_OE (A8)</th>
-                        <th>활성 경로</th>
+                        <th>Active Path</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -402,35 +402,35 @@
                         <td>1 (OFF)</td>
                         <td>X</td>
                         <td>1 (OFF)</td>
-                        <td>USB 차단 (HDMI만)</td>
+                        <td>USB disabled (HDMI only)</td>
                     </tr>
                 </tbody>
             </table>
         </div>
         
-        <!-- 중요 사항 -->
+        <!-- Important Notes -->
         <div class="note">
-            <strong>⚠️ 중요 사항:</strong>
+            <strong>⚠️ Important Notes:</strong>
             <ul style="margin: 10px 0; padding-left: 20px;">
-                <li>SN74CB3Q3253PW는 3.3V 전원 사용 (5V 허용 I/O)</li>
-                <li>USB 차동 임피던스 90Ω ±10% 유지 필수</li>
-                <li>D+/D- 트레이스 길이 차이 5mm 이내</li>
-                <li>각 MUX 칩 근처에 0.1µF 디커플링 캐패시터 배치</li>
-                <li>IR LED는 수신기 방향으로 정확히 향하도록 설치</li>
-                <li>CH5 선택 시 모든 USB 연결 차단 (JAMMA는 HDMI만 사용)</li>
+                <li>The SN74CB3Q3253PW runs on a 3.3V supply (5V-tolerant I/O).</li>
+                <li>Maintain a USB differential impedance of 90Ω ±10%.</li>
+                <li>Keep the D+/D- trace length difference within 5mm.</li>
+                <li>Place 0.1µF decoupling capacitors next to each MUX chip.</li>
+                <li>Aim the IR LED precisely toward the receiver.</li>
+                <li>When CH5 is selected, all USB connections are blocked (JAMMA uses HDMI only).</li>
             </ul>
         </div>
         
-        <!-- PCB 레이아웃 가이드 -->
+        <!-- PCB Layout  -->
         <div class="circuit-section">
-            <div class="section-title">🎯 PCB 레이아웃 권장사항</div>
+            <div class="section-title">🎯 PCB Layout Recommendations</div>
             <ul style="margin: 15px 0; padding-left: 25px;">
-                <li><strong>레이어 구성:</strong> 최소 2층 (신호/GND), 권장 4층 (신호/GND/전원/신호)</li>
-                <li><strong>트레이스 폭:</strong> USB 데이터: 0.2mm, 전원: 0.5mm 이상</li>
-                <li><strong>비아:</strong> 고속 신호 경로에 최소화 (채널당 2개 이하)</li>
-                <li><strong>그라운드:</strong> 연속적인 그라운드 플레인 필수</li>
-                <li><strong>컴포넌트 배치:</strong> MUX 칩을 USB 커넥터 가까이 배치</li>
-                <li><strong>ESD 보호:</strong> USB 포트마다 TVS 다이오드 추가 권장</li>
+                <li><strong>Layer stackup:</strong> minimum 2 layers (signal/GND); 4 layers recommended (signal/GND/power/signal).</li>
+                <li><strong>Trace width:</strong> USB data 0.2mm; power ≥0.5mm.</li>
+                <li><strong>Vias:</strong> minimize on high-speed signal paths (≤2 per channel).</li>
+                <li><strong>Ground:</strong> an unbroken ground plane is required.</li>
+                <li><strong>Component placement:</strong> keep the MUX chips close to the USB connectors.</li>
+                <li><strong>ESD protection:</strong> a TVS diode is recommended on every USB port.</li>
             </ul>
         </div>
     </div>

@@ -5,8 +5,8 @@
  * Arduino Pro Micro (5V, 16MHz)
  * OLED 0.96" I2C (SSD1306, 128x64)
  * 
- * 입력: 컴포지트, S-Video, VGA 15kHz
- * 출력: JAMMA RGB
+ * Inputs: composite, S-Video, VGA 15kHz
+ * Output: JAMMA RGB
  */
 
 #include <Wire.h>
@@ -15,7 +15,7 @@
 #include <Adafruit_SSD1306.h>
 
 // ============================================
-// OLED 설정
+// OLED configuration
 // ============================================
 
 #define SCREEN_WIDTH    128
@@ -26,7 +26,7 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 // ============================================
-// EEPROM 주소
+// EEPROM addresses
 // ============================================
 
 #define EEPROM_MAGIC      0x00
@@ -39,29 +39,29 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #define EEPROM_MAGIC_VALUE 0xA5
 
 // ============================================
-// 핀 정의
+// Pin definitions
 // ============================================
 
 // I2C (CXA2025AS, OLED)
 #define PIN_SDA       2   // Pro Micro Pin 5
 #define PIN_SCL       3   // Pro Micro Pin 6
 
-// CXA2025AS 제어
+// CXA2025AS control
 #define PIN_YS        4   // Pro Micro Pin 7
 #define PIN_YUV_SW    5   // Pro Micro Pin 8
 
-// 버튼 입력
+// Button inputs
 #define PIN_BTN_INPUT 6   // Pro Micro Pin 9
 #define PIN_BTN_MODE  7   // Pro Micro Pin 10
 #define PIN_BTN_PLUS  8   // Pro Micro Pin 11
 #define PIN_BTN_MINUS 9   // Pro Micro Pin 12
 
-// 74HC4052 제어
+// 74HC4052 control
 #define PIN_MUX_A0    10  // Pro Micro Pin 13
 #define PIN_MUX_A1    14  // Pro Micro Pin 15
 
 // ============================================
-// CXA2025AS I2C 설정
+// CXA2025AS I2C configuration
 // ============================================
 
 #define CXA2025AS_ADDR  0x44
@@ -73,7 +73,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #define REG_CONTROL     0x0B
 
 // ============================================
-// 입력 모드 정의
+// Input mode definitions
 // ============================================
 
 enum InputMode {
@@ -83,18 +83,18 @@ enum InputMode {
   INPUT_COUNT     = 3
 };
 
-// 입력 모드 이름 (OLED 표시용)
+// Input mode names (for OLED display)
 const char* INPUT_NAMES[] = {
   "COMPOSITE",
   "S-VIDEO",
   "VGA 15kHz"
 };
 
-// 입력 모드 아이콘 문자
+// Input mode icon characters
 const char INPUT_ICONS[] = {'C', 'S', 'V'};
 
 // ============================================
-// 조정 모드 정의
+// Adjust mode definitions
 // ============================================
 
 enum AdjustMode {
@@ -105,7 +105,7 @@ enum AdjustMode {
   ADJ_COUNT      = 4
 };
 
-// 조정 모드 이름 (OLED 표시용)
+// Adjust mode names (for OLED display)
 const char* ADJUST_NAMES[] = {
   "BRIGHTNESS",
   "CONTRAST",
@@ -113,7 +113,7 @@ const char* ADJUST_NAMES[] = {
   "HUE"
 };
 
-// 조정 모드 약어 (상단 표시용)
+// Adjust mode abbreviations (for top display)
 const char* ADJUST_SHORT[] = {
   "BRT",
   "CON",
@@ -122,7 +122,7 @@ const char* ADJUST_SHORT[] = {
 };
 
 // ============================================
-// 전역 변수
+// Global variables
 // ============================================
 
 InputMode currentInput = INPUT_COMPOSITE;
@@ -133,25 +133,25 @@ uint8_t contrast   = 32;
 uint8_t saturation = 32;
 uint8_t hue        = 32;
 
-// 버튼 디바운스
+// Button debounce
 unsigned long lastButtonTime = 0;
 const unsigned long DEBOUNCE_DELAY = 150;
 
-// 화면 업데이트 플래그
+// Display update flag
 bool needDisplayUpdate = true;
 
-// CXA2025AS C-TRAP 상태 (Composite 모드일 때만 ON)
-// 데이터시트: 0x00 레지스터 BIT6 = C-TRAP (Y 신호의 3.58MHz chroma 트랩)
-//   Composite: C-TRAP=1 (composite Y에서 chroma 노치 제거 필요)
-//   S-Video  : C-TRAP=0 (Y가 이미 분리된 휘도이므로 트랩 불필요)
-//   VGA      : C-TRAP=0 (RGB 직접 입력이라 무관)
+// CXA2025AS C-TRAP state (ON only in Composite mode)
+// Datasheet: register 0x00 BIT6 = C-TRAP (3.58MHz chroma trap on the Y signal)
+//   Composite: C-TRAP=1 (need to notch out chroma from composite Y)
+//   S-Video  : C-TRAP=0 (Y is already a separated luma signal, so no trap needed)
+//   VGA      : C-TRAP=0 (irrelevant, direct RGB input)
 bool ctrap_active = false;
 
-// OLED 사용 가능 여부 (실패 시 false로 두고 영상 처리는 계속 진행)
+// OLED availability (set to false on failure; video processing continues regardless)
 bool oled_ok = false;
 
 // ============================================
-// 함수 선언
+// Function declarations
 // ============================================
 
 void setupPins();
@@ -176,7 +176,7 @@ void drawAdjustSection();
 void drawProgressBar(int x, int y, int width, int height, int value, int maxValue);
 
 // ============================================
-// 초기화
+// Initialization
 // ============================================
 
 void setup() {
@@ -185,10 +185,10 @@ void setup() {
   setupPins();
   setupI2C();
   
-  // OLED 초기화 (실패해도 영상 처리는 계속)
+  // OLED init (video processing continues even if it fails)
   setupOLED();
   
-  // 시작 화면 (OLED 사용 가능할 때만)
+  // Splash screen (only when OLED is available)
   if (oled_ok) {
     display.clearDisplay();
     display.setTextSize(2);
@@ -212,7 +212,7 @@ void setup() {
 }
 
 // ============================================
-// 메인 루프
+// Main loop
 // ============================================
 
 void loop() {
@@ -225,7 +225,7 @@ void loop() {
 }
 
 // ============================================
-// 핀 초기화
+// Pin initialization
 // ============================================
 
 void setupPins() {
@@ -246,7 +246,7 @@ void setupPins() {
 }
 
 // ============================================
-// I2C 초기화
+// I2C initialization
 // ============================================
 
 void setupI2C() {
@@ -255,21 +255,21 @@ void setupI2C() {
 }
 
 // ============================================
-// OLED 초기화
+// OLED initialization
 // ============================================
 
 void setupOLED() {
   oled_ok = display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR);
   if (!oled_ok) {
     Serial.println(F("OLED failed - continuing without display"));
-    return;  // OLED 없어도 영상 처리는 계속 진행
+    return;  // video processing continues even without an OLED
   }
   display.clearDisplay();
   display.display();
 }
 
 // ============================================
-// CXA2025AS 초기화
+// CXA2025AS initialization
 // ============================================
 
 void setupCXA2025AS() {
@@ -277,18 +277,18 @@ void setupCXA2025AS() {
   updateAllRegisters();
   
   // REG_CONTROL (0x0B) = 0xF8 = 0b11111000
-  //   BIT7 RON=1, BIT6 GON=1, BIT5 BON=1 : R/G/B 출력 활성화
-  //   BIT4 PICON=1                       : Picture(RGB) 전체 ON
-  //   BIT3 VOFF=1                        : V 톱니파 발진 정지 (CRT 편향 미사용이므로 OK)
-  //   BIT2 FHHI=0                        : H AFC 정상 동작
-  //   BIT1 CD-MODE=0                     : V countdown 자동
-  //   BIT0 AKBOFF=0                      : AKB 동작 ON (자동 컷오프)
+  //   BIT7 RON=1, BIT6 GON=1, BIT5 BON=1 : enable R/G/B outputs
+  //   BIT4 PICON=1                       : Picture(RGB) fully ON
+  //   BIT3 VOFF=1                        : stop V sawtooth oscillator (OK, CRT deflection unused)
+  //   BIT2 FHHI=0                        : H AFC normal operation
+  //   BIT1 CD-MODE=0                     : V countdown automatic
+  //   BIT0 AKBOFF=0                      : AKB operation ON (auto cutoff)
   uint8_t control = 0xF8;
   writeRegister(REG_CONTROL, control);
 }
 
 // ============================================
-// 입력 모드 설정
+// Input mode selection
 // ============================================
 
 void setInputMode(InputMode mode) {
@@ -298,7 +298,7 @@ void setInputMode(InputMode mode) {
 }
 
 // ============================================
-// 74HC4052 채널 선택
+// 74HC4052 channel selection
 // ============================================
 
 void setMuxChannel(uint8_t channel) {
@@ -307,34 +307,34 @@ void setMuxChannel(uint8_t channel) {
 }
 
 // ============================================
-// CXA2025AS 모드 설정
+// CXA2025AS mode setup
 // ============================================
 
 void setCXAMode(InputMode mode) {
   switch (mode) {
     case INPUT_COMPOSITE:
-      digitalWrite(PIN_YS, LOW);          // Y/C block 선택
-      digitalWrite(PIN_YUV_SW, LOW);      // 내부 Y/C 경로
-      ctrap_active = true;                // composite Y에서 chroma 노치 ON
+      digitalWrite(PIN_YS, LOW);          // select Y/C path
+      digitalWrite(PIN_YUV_SW, LOW);      // internal Y/C path
+      ctrap_active = true;                // chroma notch ON on composite Y
       break;
     case INPUT_SVIDEO:
-      digitalWrite(PIN_YS, LOW);          // Y/C block 선택
-      digitalWrite(PIN_YUV_SW, LOW);      // 내부 Y/C 경로
-      ctrap_active = false;               // 외부 C 사용, Y는 깨끗 -> trap OFF
+      digitalWrite(PIN_YS, LOW);          // select Y/C path
+      digitalWrite(PIN_YUV_SW, LOW);      // internal Y/C path
+      ctrap_active = false;               // external C used, Y is clean -> trap OFF
       break;
     case INPUT_VGA:
-      digitalWrite(PIN_YS, HIGH);         // RGB block 선택 (RIN/GIN/BIN 직접)
-      digitalWrite(PIN_YUV_SW, LOW);      // YS=HIGH 우선이라 의미 없음
-      ctrap_active = false;               // RGB 직접 경로라 무관
+      digitalWrite(PIN_YS, HIGH);         // select RGB path (RIN/GIN/BIN direct)
+      digitalWrite(PIN_YUV_SW, LOW);      // meaningless, YS=HIGH takes priority
+      ctrap_active = false;               // irrelevant, direct RGB path
       break;
   }
   
-  // 0x00 레지스터 즉시 갱신 (C-TRAP 비트 + CONTRAST 값)
+  // immediate update of register 0x00 (C-TRAP bit + CONTRAST value)
   writeContrastReg();
 }
 
 // ============================================
-// 0x00 레지스터 쓰기 헬퍼 (C-TRAP[b6] + CONTRAST[5:0])
+// Helper to write register 0x00 (C-TRAP[b6] + CONTRAST[5:0])
 // ============================================
 void writeContrastReg() {
   uint8_t reg = (ctrap_active ? 0x40 : 0x00) | (contrast & 0x3F);
@@ -342,7 +342,7 @@ void writeContrastReg() {
 }
 
 // ============================================
-// I2C 레지스터 쓰기
+// I2C register write
 // ============================================
 
 void writeRegister(uint8_t reg, uint8_t value) {
@@ -353,18 +353,18 @@ void writeRegister(uint8_t reg, uint8_t value) {
 }
 
 // ============================================
-// 모든 레지스터 업데이트
+// Update all registers
 // ============================================
 
 void updateAllRegisters() {
   writeRegister(REG_BRIGHTNESS, brightness);
-  writeContrastReg();   // 0x00에는 C-TRAP 비트 보존하여 쓰기
+  writeContrastReg();   // write 0x00 preserving the C-TRAP bit
   writeRegister(REG_SATURATION, saturation);
   writeRegister(REG_HUE, hue);
 }
 
 // ============================================
-// 버튼 처리
+// Button handling
 // ============================================
 
 void handleButtons() {
@@ -372,7 +372,7 @@ void handleButtons() {
     return;
   }
   
-  // 입력 선택 버튼
+  // Input select button
   if (digitalRead(PIN_BTN_INPUT) == LOW) {
     lastButtonTime = millis();
     currentInput = (InputMode)((currentInput + 1) % INPUT_COUNT);
@@ -382,7 +382,7 @@ void handleButtons() {
     while (digitalRead(PIN_BTN_INPUT) == LOW);
   }
   
-  // 모드 선택 버튼
+  // Mode select button
   if (digitalRead(PIN_BTN_MODE) == LOW) {
     lastButtonTime = millis();
     currentAdjust = (AdjustMode)((currentAdjust + 1) % ADJ_COUNT);
@@ -390,7 +390,7 @@ void handleButtons() {
     while (digitalRead(PIN_BTN_MODE) == LOW);
   }
   
-  // + 버튼
+  // + button
   if (digitalRead(PIN_BTN_PLUS) == LOW) {
     lastButtonTime = millis();
     adjustValue(+2);
@@ -398,7 +398,7 @@ void handleButtons() {
     while (digitalRead(PIN_BTN_PLUS) == LOW);
   }
   
-  // - 버튼
+  // - button
   if (digitalRead(PIN_BTN_MINUS) == LOW) {
     lastButtonTime = millis();
     adjustValue(-2);
@@ -408,7 +408,7 @@ void handleButtons() {
 }
 
 // ============================================
-// 값 포인터 가져오기
+// Get pointer to a value
 // ============================================
 
 uint8_t* getValuePtr(AdjustMode mode) {
@@ -422,7 +422,7 @@ uint8_t* getValuePtr(AdjustMode mode) {
 }
 
 // ============================================
-// 값 조정
+// Adjust a value
 // ============================================
 
 void adjustValue(int8_t delta) {
@@ -435,7 +435,7 @@ void adjustValue(int8_t delta) {
   
   switch (currentAdjust) {
     case ADJ_BRIGHTNESS: writeRegister(REG_BRIGHTNESS, brightness); break;
-    case ADJ_CONTRAST:   writeContrastReg(); break;  // C-TRAP 비트 보존하여 0x00 쓰기
+    case ADJ_CONTRAST:   writeContrastReg(); break;  // write 0x00 preserving the C-TRAP bit
     case ADJ_SATURATION: writeRegister(REG_SATURATION, saturation); break;
     case ADJ_HUE:        writeRegister(REG_HUE, hue); break;
     default: return;
@@ -445,7 +445,7 @@ void adjustValue(int8_t delta) {
 }
 
 // ============================================
-// EEPROM 설정 로드
+// Load EEPROM settings
 // ============================================
 
 void loadSettings() {
@@ -468,7 +468,7 @@ void loadSettings() {
 }
 
 // ============================================
-// EEPROM 설정 저장
+// Save EEPROM settings
 // ============================================
 
 void saveSettings() {
@@ -481,11 +481,11 @@ void saveSettings() {
 }
 
 // ============================================
-// OLED 화면 업데이트
+// Update OLED display
 // ============================================
 
 void updateDisplay() {
-  if (!oled_ok) return;  // OLED 없으면 화면 갱신 스킵
+  if (!oled_ok) return;  // skip the refresh if there is no OLED
   
   display.clearDisplay();
   
@@ -497,20 +497,20 @@ void updateDisplay() {
 }
 
 // ============================================
-// 헤더 그리기
+// Draw the header
 // ============================================
 
 void drawHeader() {
-  // 상단 라인
+  // top line
   display.drawLine(0, 12, 127, 12, SSD1306_WHITE);
   
-  // 타이틀
+  // title
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(0, 2);
   display.print(F("MULTI-SRC"));
   
-  // 현재 조정 모드 표시 (우측 상단)
+  // show current adjust mode (top right)
   display.setCursor(90, 2);
   display.print(F("["));
   display.print(ADJUST_SHORT[currentAdjust]);
@@ -518,39 +518,39 @@ void drawHeader() {
 }
 
 // ============================================
-// 입력 섹션 그리기
+// Draw the input section
 // ============================================
 
 void drawInputSection() {
   int y = 16;
   
-  // 입력 선택 박스들
+  // input select boxes
   for (int i = 0; i < INPUT_COUNT; i++) {
     int x = i * 43;
     int boxWidth = 40;
     int boxHeight = 18;
     
     if (i == currentInput) {
-      // 선택된 입력: 채워진 박스
+      // selected input: filled box
       display.fillRoundRect(x, y, boxWidth, boxHeight, 3, SSD1306_WHITE);
       display.setTextColor(SSD1306_BLACK);
     } else {
-      // 선택 안된 입력: 빈 박스
+      // unselected input: empty box
       display.drawRoundRect(x, y, boxWidth, boxHeight, 3, SSD1306_WHITE);
       display.setTextColor(SSD1306_WHITE);
     }
     
-    // 아이콘 문자
+    // icon character
     display.setTextSize(2);
     display.setCursor(x + 14, y + 2);
     display.print(INPUT_ICONS[i]);
   }
   
-  // 선택된 입력 이름 (아래에 표시)
+  // selected input name (shown below)
   display.setTextColor(SSD1306_WHITE);
   display.setTextSize(1);
   
-  // 이름 중앙 정렬
+  // center the name
   int nameLen = strlen(INPUT_NAMES[currentInput]);
   int nameX = (128 - nameLen * 6) / 2;
   display.setCursor(nameX, 36);
@@ -558,49 +558,49 @@ void drawInputSection() {
 }
 
 // ============================================
-// 조정 섹션 그리기
+// Draw the adjust section
 // ============================================
 
 void drawAdjustSection() {
   int y = 46;
   
-  // 구분선
+  // separator line
   display.drawLine(0, y, 127, y, SSD1306_WHITE);
   
   y += 2;
   
-  // 조정 모드 이름
+  // adjust mode name
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(0, y);
   display.print(ADJUST_NAMES[currentAdjust]);
   
-  // 현재 값
+  // current value
   uint8_t* valuePtr = getValuePtr(currentAdjust);
   display.setCursor(100, y);
   if (*valuePtr < 10) display.print(F(" "));
   display.print(*valuePtr);
   
-  // 프로그레스 바
+  // progress bar
   y += 9;
   drawProgressBar(0, y, 128, 7, *valuePtr, 63);
 }
 
 // ============================================
-// 프로그레스 바 그리기
+// Draw the progress bar
 // ============================================
 
 void drawProgressBar(int x, int y, int width, int height, int value, int maxValue) {
-  // 외곽선
+  // outline
   display.drawRect(x, y, width, height, SSD1306_WHITE);
   
-  // 채움
+  // fill
   int fillWidth = map(value, 0, maxValue, 0, width - 4);
   if (fillWidth > 0) {
     display.fillRect(x + 2, y + 2, fillWidth, height - 4, SSD1306_WHITE);
   }
   
-  // 중앙 마커 (기본값 위치)
+  // center marker (default value position)
   int centerX = x + (width / 2);
   display.drawLine(centerX, y, centerX, y + height - 1, SSD1306_WHITE);
 }

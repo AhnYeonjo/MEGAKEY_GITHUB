@@ -1,10 +1,10 @@
 // headers/addons/serial_input.h
 // GP2040-CE Serial Input Addon Header
-// Version: 2.4 - SerialInputAddon이 OLED + WS2812 모두 독점 사용
+// Version: 2.4 - SerialInputAddon uses both OLED and WS2812 exclusively
 //
-// 주의사항:
-// 1. Display Addon 비활성화 필수! (OLED I2C 충돌 방지)
-// 2. PlayerLEDAddon 비활성화 필수! (WS2812 PIO 충돌 방지)
+// Notes:
+// 1. Display Addon must be disabled! (prevents OLED I2C conflict)
+// 2. PlayerLEDAddon must be disabled! (prevents WS2812 PIO conflict)
 
 #ifndef _SERIAL_INPUT_H_
 #define _SERIAL_INPUT_H_
@@ -21,37 +21,37 @@
 #include <string>
 
 #ifndef PLAYER_NUMBER
-    #define PLAYER_NUMBER 1 // 기본값은 1P로 설정
+    #define PLAYER_NUMBER 1 // default is 1P
 #endif
 
-// ========== OLED 디스플레이 ==========
-// ✅ SerialInputAddon이 OLED 독점 사용
+// ========== OLED display ==========
+// ✅ SerialInputAddon uses the OLED exclusively
 #define USE_OLED_DISPLAY
 
-// ========== UART 설정 ==========
+// ========== UART config ==========
 #define SERIAL_UART uart1
 #define SERIAL_RX_PIN 5
 #define SERIAL_BAUDRATE 250000
 
 #ifdef RP2040_ZERO
-    // ✅ SerialInputAddon이 WS2812 독점 사용
+    // ✅ SerialInputAddon uses WS2812 exclusively
     #define USE_WS2812_LED
     #define WS2812_PIN 16
     #define WS2812_IS_RGBW false
 #else
-    // Pico의 일반 LED
+    // Pico's onboard LED
     #define STATUS_LED_PIN 25
 #endif
 
 
 
 // ========================================
-// I2C 및 OLED 라이브러리 포함
+// Include I2C and OLED libraries
 // ========================================
 #include "hardware/i2c.h"
 #include "pico/binary_info.h"
 
-// SSD1306 설정
+// SSD1306 config
 #define OLED_I2C_PORT i2c0
 #define OLED_I2C_SDA_PIN 0
 #define OLED_I2C_SCL_PIN 1
@@ -60,7 +60,7 @@
 #define OLED_HEIGHT 64
 
 // ========================================
-// SSD1306 OLED 명령어 정의
+// SSD1306 OLED command definitions
 // ========================================
 
 #define OLED_SET_CONTRAST 0x81
@@ -90,25 +90,25 @@
 #define OLED_SWITCH_CAP_VCC 0x02
 
 
-// 드림캐스트 출력용 GPIO 핀 정의 (사용자 환경에 맞게 수정)
+// GPIO pin definitions for Dreamcast output (adjust to your setup)
 #define DREAMCAST_SENSE_PIN   12
-#define DREAMCAST_MAPLE_A_PIN 10 // Maple A/B는 연속된 핀이어야 함
-// Maple B 핀은 A핀에 이어지는 다음 핀 (GP11)을 자동으로 사용합니다.
+#define DREAMCAST_MAPLE_A_PIN 10 // Maple A/B must be consecutive pins
+// The Maple B pin automatically uses the next pin after A (GP11).
 #define DREAMCAST_PIO_ENABLE_PIN 21
-// ★★★ 통신 타임아웃 정의 (100ms) ★★★
+// ★★★ Communication timeout (100ms) ★★★
 #define DREAMCAST_RX_TIMEOUT_US 100000
 
-// ========== 디버그 모드 ==========
-// #define DEBUG_MODE  // 주석 해제로 디버그 활성화
+// ========== Debug mode ==========
+// #define DEBUG_MODE  // uncomment to enable debug
 
-// ========== 상수 정의 ==========
+// ========== Constant definitions ==========
 
-// 패드 모드 정의
+// Pad mode definitions
 #define PAD_MODE_DPAD    0
 #define PAD_MODE_LANALOG 1
 #define PAD_MODE_RANALOG 2
 
-// Arduino 모드 정의
+// Arduino mode definitions
 #define ARDUINO_MODE_KEYBOARD 0
 #define ARDUINO_MODE_XINPUT   1
 #define ARDUINO_MODE_SWITCH   2
@@ -119,7 +119,7 @@
 #define ARDUINO_MODE_JVS      7
 #define ARDUINO_MODE_DREAMCAST 8
 
-// 버튼 비트 정의 (Arduino와 동일)
+// Button bit definitions (same as Arduino)
 #define BIT_SELECT  0
 #define BIT_HOME    1
 #define BIT_START   2
@@ -137,21 +137,21 @@
 #define BIT_RT      14
 #define BIT_TOUCH   18
 
-// 통신 타이밍
+// Communication timing
 #define CONNECTION_TIMEOUT_US 500000
 #define MODE_CHANGE_DELAY_US 100000
 #define MAX_BYTES_PER_FRAME 64
 
-// 메시지 헤더/푸터
+// Message header/footer
 #define BINARY_HEADER 0xAA
 #define BINARY_FOOTER 0x55
 
 #if PLAYER_NUMBER == 1
-    // 회로도에서 TXS0108E의 OE 핀에 연결할 RP2040의 GPIO 핀 번호
+    // RP2040 GPIO pin number connected to the TXS0108E OE pin in the schematic
     #define LEVEL_SHIFTER_ENABLE_PIN 28
 #endif
 
-// ========== 메시지 구조체 ==========
+// ========== Message struct ==========
 struct __attribute__((packed)) CompactMessage {
     uint8_t header;
     uint32_t p1_buttons;
@@ -162,7 +162,7 @@ struct __attribute__((packed)) CompactMessage {
     uint8_t footer;
 };
 
-// ========== SerialInputAddon 클래스 ==========
+// ========== SerialInputAddon class ==========
 class SerialInputAddon : public GPAddon {
 public:
     virtual bool available();
@@ -170,7 +170,7 @@ public:
     virtual void preprocess();
     virtual void process();
     
-    // GPAddon 필수 가상 함수들
+    // Required GPAddon virtual functions
     virtual void postprocess(bool) {}
     virtual std::string name() { return "SerialInput"; }
     virtual void reinit() { 
@@ -181,7 +181,7 @@ public:
     }
     
 private:
-    // 시리얼 상태 구조체
+    // Serial state struct
     struct __attribute__((packed)) SerialState {
         uint32_t p1_buttons;
         uint32_t p2_buttons;
@@ -191,27 +191,27 @@ private:
         uint8_t channel_state;
     } serial_state;
     
-    // 통신 버퍼
+    // Communication buffer
     uint8_t message_buffer[sizeof(CompactMessage)];
     uint8_t buffer_index;
     
-    // 연결 상태
+    // Connection state
     uint32_t last_receive_time;
     bool connection_timeout;
     bool addon_enabled;
     bool was_timeout;
     
-    // 모드 변경 관련
+    // Mode-change related
     bool mode_change_pending;
     uint32_t mode_change_time;
     
-    // Gamepad 상태 백업
+    // Gamepad state backup
     GamepadState previous_state;
     
-    // 키보드 매핑 초기화 플래그
+    // Keyboard mapping init flag
     bool keyboard_mapping_initialized = false;
     
-    // 에러 통계
+    // Error statistics
     struct {
         uint32_t crc_errors;
         uint32_t invalid_headers;
@@ -219,13 +219,13 @@ private:
         uint32_t buffer_overflows;
     } error_stats;
     
-    // updateStatusLED에서 사용할 상태 변수들
+    // State variables used by updateStatusLED
     uint32_t led_state_last_time;
     uint32_t led_mode_change_time;
     bool led_blink_state;
     uint8_t led_last_mode;
 
-    // 초기화 애니메이션 상태를 관리할 변수
+    // Variable tracking the init-animation state
     enum LEDInitState {
         NOT_STARTED,
         ANIMATING,
@@ -233,7 +233,7 @@ private:
     };
     LEDInitState led_init_state;
     
-    // 메서드들
+    // Methods
     bool checkUartSafety();
     void receiveSerialData();
     void processKeyboardModeInput(Gamepad* gamepad);
@@ -249,16 +249,16 @@ private:
     void setupWS2812();
     void setLEDColor(uint8_t r, uint8_t g, uint8_t b);
 
-    // PIO 관련 변수들 대신 NeoPico 객체를 선언합니다.
+    // Declare a NeoPico object instead of PIO-related variables.
     NeoPico neoPico;
     #endif
 
     #ifdef USE_OLED_DISPLAY
-    bool oled_available;  // OLED 사용 가능 여부
+    bool oled_available;  // whether the OLED is available
         
-    // ===== OLED 안전 체크 함수 (새로 추가!) =====
+    // ===== OLED safety-check function (newly added!) =====
     bool checkOLEDAvailable();     
-    // ===== OLED 기본 함수들 =====
+    // ===== OLED base functions =====
     bool setupOLED();
     void oled_send_cmd(uint8_t cmd);
     void oled_send_data(uint8_t* data, size_t len);
@@ -266,36 +266,36 @@ private:
     void oled_draw_char(uint8_t x, uint8_t y, char c, uint8_t size);
     void oled_draw_string(uint8_t x, uint8_t y, const char* str, uint8_t size);
     
-    // ===== 개선된 디스플레이 함수들 =====
+    // ===== improved display functions =====
     const char* getModeString(uint8_t mode);
-    const char* getPadModeString(uint8_t modes, bool is_player1);  // ← 새로 추가
-    bool isSwapped();                                               // ← 새로 추가
+    const char* getPadModeString(uint8_t modes, bool is_player1);  // ← newly added
+    bool isSwapped();                                               // ← newly added
     
-    // ===== 4가지 디스플레이 스타일 =====
-    void updateDisplay();           // 기본 - 모든 정보 표시 (추천)
-    void updateDisplayCompact();    // 컴팩트 - 공간 절약
-    void updateDisplayPlayer();     // 플레이어 중심 - 내 정보 강조
-    void updateDisplayIcon();       // 아이콘 - 간결하고 심플
+    // ===== 4 display styles =====
+    void updateDisplay();           // default - show all info (recommended)
+    void updateDisplayCompact();    // compact - space-saving
+    void updateDisplayPlayer();     // player-centric - emphasize own info
+    void updateDisplayIcon();       // icon - concise and simple
     #endif
     
-    // ★★★ 드림캐스트 관련 멤버 변수 및 함수 선언 (정리 및 추가) ★★★
+    // ★★★ Dreamcast-related member variables and function declarations (tidied & added) ★★★
     
-    // PIO 하드웨어 리소스
+    // PIO hardware resources
     PIO dreamcast_pio;
     uint dreamcast_sm;
     uint dreamcast_offset;
     uint32_t last_dreamcast_rx_time;
     bool dreamcast_pio_active;
 
-    // Maple Bus 통신 상태 관리
+    // Maple Bus communication state
     enum MapleBusState { LISTENING, RESPONDING };
     MapleBusState maple_state;
 
-    // PIO 초기화 및 제어 함수
+    // PIO init and control functions
     void setupDreamcastPIO();
-    void startMapleListen(); // PIO를 수신 모드로 시작하는 함수
+    void startMapleListen(); // Function that starts the PIO in receive mode
 
-    // 통신 처리 함수
+    // Communication handling functions
     void processDreamcastOutput(const GamepadState& state);
     void sendDreamcastReport(const uint8_t* report_data, size_t len);
 

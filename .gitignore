@@ -15,5 +15,5 @@ build/
 .vscode/
 *.code-workspace
 
-# uf2 binaries (too large for git — release assets 권장)
+# uf2 binaries (too large for git — publish as release assets)
 rp2040/firmware/*.uf2

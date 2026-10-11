@@ -1,20 +1,20 @@
 // ============================================================================
 //  pins_megakey.h
-//  MegaKey IO PCB - AVR128DB64-I/PT 핀 정의
-//  DxCore Arduino 환경용
+//  MegaKey IO PCB - AVR128DB64-I/PT pin definitions
+//  For the DxCore Arduino environment
 // ============================================================================
 #ifndef PINS_MEGAKEY_H
 #define PINS_MEGAKEY_H
 
-// ===== JVS 통신 (USART0: PA0/PA1) =====
-//   JVS_TX/RX는 Serial0 객체로 자동 사용 (Serial)
-//   JVSIO::DataClient에서 Serial.begin()/Serial.end() 호출
+// ===== JVS communication (USART0: PA0/PA1) =====
+//   JVS_TX/RX are used automatically via the Serial0 object (Serial)
+//   JVSIO::DataClient calls Serial.begin()/Serial.end()
 
-// ===== Timer 출력 (Hardware PWM) =====
-#define IR_LED_PIN         PIN_PA2    // TCB0 WO → NEC 38kHz HDMI 스위치
-#define JVS_SENSE_PIN      PIN_PA3    // TCB1 WO → JVS Sense 4MHz 토글
+// ===== Timer output (Hardware PWM) =====
+#define IR_LED_PIN         PIN_PA2    // TCB0 WO → NEC 38kHz HDMI switch
+#define JVS_SENSE_PIN      PIN_PA3    // TCB1 WO → JVS Sense 4MHz toggle
 
-// ===== Player 1 버튼 (PORTA + PORTB + PORTC) =====
+// ===== Player 1 buttons (PORTA + PORTB + PORTC) =====
 #define P1_UP_PIN          PIN_PA4
 #define P1_DOWN_PIN        PIN_PA5
 #define P1_LEFT_PIN        PIN_PA6
@@ -32,10 +32,10 @@
 #define P1_HOME_PIN        PIN_PC3
 #define P1_TURBO_PIN       PIN_PC4
 #define P1_TOUCHPAD_PIN    PIN_PC5
-#define P1_LANAL_PIN       PIN_PC6    // L3 스틱 누름 감지
-#define P1_RANAL_PIN       PIN_PC7    // R3 스틱 누름 감지
+#define P1_LANAL_PIN       PIN_PC6    // L3 stick press detect
+#define P1_RANAL_PIN       PIN_PC7    // R3 stick press detect
 
-// ===== Player 2 버튼 (PORTD + PORTE + PORTF) =====
+// ===== Player 2 buttons (PORTD + PORTE + PORTF) =====
 #define P2_UP_PIN          PIN_PD0
 #define P2_DOWN_PIN        PIN_PD1
 #define P2_LEFT_PIN        PIN_PD2
@@ -52,20 +52,20 @@
 #define P2_SELECT_PIN      PIN_PE5
 #define P2_HOME_PIN        PIN_PE6
 #define P2_TURBO_PIN       PIN_PE7
-#define P2_TOUCHPAD_PIN    PIN_PF1    // USART2 RX 비활성화 후 GPIO로 사용
+#define P2_TOUCHPAD_PIN    PIN_PF1    // used as GPIO after disabling USART2 RX
 #define P2_LANAL_PIN       PIN_PF2
 #define P2_RANAL_PIN       PIN_PF3
 
-// ===== RP2040 TX (단방향, RX는 비활성화) =====
+// ===== RP2040 TX (one-way, RX disabled) =====
 //   USART2 (PF0): RP2040 #1 (1P) - Serial2
 //   USART3 (PB0): RP2040 #2 (2P) - Serial3
 
-// ===== 74HC595 시프트 레지스터 SPI (PORTF) =====
+// ===== 74HC595 shift register SPI (PORTF) =====
 #define SR_DATA_PIN        PIN_PF4    // 74HC595 SER (pin 14)
 #define SR_CLOCK_PIN       PIN_PF5    // 74HC595 SRCLK (pin 11)
-#define SR_LATCH_PIN       PIN_PF6    // 74HC595 RCLK (pin 12)  ⚠ RESET fuse 비활성화 필수
+#define SR_LATCH_PIN       PIN_PF6    // 74HC595 RCLK (pin 12)  ⚠ Reset fuse must be disabled
 
-// 74HC595 16비트 출력 비트 할당
+// 74HC595 16-bit output bit assignment
 #define SR_BIT_KVM1_LED     0
 #define SR_BIT_KVM2_LED     1
 #define SR_BIT_KVM3_LED     2
@@ -76,16 +76,16 @@
 #define SR_BIT_MUX1_OE      7
 #define SR_BIT_MUX2_SEL     8
 #define SR_BIT_MUX2_OE      9
-// bit 10~15: 예비 (확장용)
+// bits 10~15: reserved (for expansion)
 
-// ===== KVM 채널 선택 버튼 (PORTG 0~4) =====
+// ===== KVM channel select buttons (PORTG 0~4) =====
 #define CHK_KVM1_PIN       PIN_PG0
 #define CHK_KVM2_PIN       PIN_PG1
 #define CHK_KVM3_PIN       PIN_PG2
 #define CHK_KVM4_PIN       PIN_PG3
 #define CHK_KVM5_PIN       PIN_PG4
 
-// ===== 모드 설정 스위치 (PORTG 5~7) =====
+// ===== Mode config switches (PORTG 5~7) =====
 #define CHK_JOYSTICK_PIN   PIN_PG5
 #define CHK_JVS_PIN        PIN_PG6
 #define CHK_SWAPSTICK_PIN  PIN_PG7

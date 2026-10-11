@@ -1,11 +1,11 @@
 // src/addons/serial_input.cpp
 // GP2040-CE Serial Input Addon Implementation
-// Version: 2.3 - Display Addon 비활성화, OLED 독점 사용
+// Version: 2.3 - Display Addon disabled, OLED used exclusively
 //
-// 주의사항:
-// 1. GP2040-CE의 Display Addon을 반드시 비활성화해야 함 (I2C 충돌 방지)
-// 2. PlayerLEDAddon은 활성화 유지 (WS2812 관리)
-// 3. SerialInputAddon이 OLED를 독점 사용하여 시리얼 상태 표시
+// Notes:
+// 1. GP2040-CE's Display Addon MUST be disabled (prevents I2C conflict)
+// 2. Keep PlayerLEDAddon enabled (manages WS2812)
+// 3. SerialInputAddon uses the OLED exclusively to show serial status
 
 #include "addons/serial_input.h"
 #include "maple_bus.pio.h" 
@@ -37,10 +37,10 @@ static const struct pio_program blink_program = {
 #endif
 
 // ========================================
-// 5x7 폰트 데이터
+// 5x7 font data
 // ========================================
 static const uint8_t font5x7[][5] = {
-    {0x00, 0x00, 0x00, 0x00, 0x00}, // 공백 (0)
+    {0x00, 0x00, 0x00, 0x00, 0x00}, // space (0)
     {0x3E, 0x51, 0x49, 0x45, 0x3E}, // 0 (1)
     {0x00, 0x42, 0x7F, 0x40, 0x00}, // 1 (2)
     {0x42, 0x61, 0x51, 0x49, 0x46}, // 2 (3)
@@ -113,21 +113,21 @@ static const uint8_t font5x7[][5] = {
 };
 
 // ========================================
-// ★★★ 드림캐스트 통신 로직 (완전 개편) ★★★
+// ★★★ Dreamcast communication logic (fully reworked) ★★★
 // ========================================
 
-// 드림캐스트 컨트롤러의 기능 코드 (Function Code)
+// Dreamcast controller function code
 #define DREAMCAST_FUNC_CONTROLLER 0x01000000
 
-// Maple Bus 프레임의 마지막 워드임을 나타내는 플래그
+// Flag indicating the last word of a Maple Bus frame
 #define MAPLE_FRAME_LAST_WORD 0x80
 
-// 드림캐스트 본체가 보내는 주요 명령어
-#define MAPLE_COMMAND_DEVINFO   0x01 // 장치 정보 요청
-#define MAPLE_COMMAND_GETCOND   0x09 // 컨트롤러 상태 요청
+// Main commands sent by the Dreamcast host
+#define MAPLE_COMMAND_DEVINFO   0x01 // device info request
+#define MAPLE_COMMAND_GETCOND   0x09 // controller status request
 
-// Maple Bus의 CRC는 모든 바이트를 XOR 하는 간단한 방식입니다.
-// Maple Bus CRC 계산 헬퍼 함수
+// The Maple Bus CRC is a simple XOR of all bytes.
+// Maple Bus CRC calculation helper
 uint8_t calculateMapleCrc(const uint8_t* data, size_t len) {
     uint8_t crc = 0;
     for (size_t i = 0; i < len; ++i) {
@@ -136,9 +136,9 @@ uint8_t calculateMapleCrc(const uint8_t* data, size_t len) {
     return crc;
 }
 
-// PIO 초기화 함수 (setup()에서 한 번만 호출)
+// PIO init function (called once from setup())
 void SerialInputAddon::setupDreamcastPIO() {
-    // 1. 시스템에서 사용 가능한 PIO 인스턴스와 상태 머신(SM)을 안전하게 찾습니다.
+    // 1. Safely find an available PIO instance and state machine (SM).
     PIO pio = pio0;
     int sm = pio_claim_unused_sm(pio, false);
     if (sm == -1) {
@@ -150,47 +150,47 @@ void SerialInputAddon::setupDreamcastPIO() {
     debugPrint("Dreamcast PIO assigned to pio%d, sm%d", (pio == pio0) ? 0 : 1, sm);
     #endif
 
-    // 2. PIO 프로그램을 메모리에 로드합니다.
+    // 2. Load the PIO program into memory.
     uint offset = pio_add_program(pio, &maple_bus_program);
 
-    // 3. 찾은 리소스로 PIO를 초기화합니다.
+    // 3. Initialize the PIO with the found resources.
     dreamcast_pio = pio;
     dreamcast_sm = sm;
     dreamcast_offset = offset;
     
-    // 4. .pio.h에 생성된 헬퍼 함수를 호출하여 PIO SM의 기본 설정을 구성합니다.
-    //    이 함수는 클럭 분주율, FIFO 설정, 시프트 방향 등을 설정합니다.
+    // 4. Call the helper generated in .pio.h to configure the PIO SM defaults.
+    //    This function sets clock divider, FIFO config, shift direction, etc.
     maple_bus_program_init(dreamcast_pio, dreamcast_sm, dreamcast_offset, DREAMCAST_MAPLE_A_PIN, DREAMCAST_PIO_ENABLE_PIN);
 }
 
-// PIO를 리스닝 모드로 설정하고 시작하는 함수
+// Configure and start the PIO in listening mode
 void SerialInputAddon::startMapleListen() {
     pio_sm_set_enabled(dreamcast_pio, dreamcast_sm, false);
 
-    // 2. 핀 방향을 입력(Input)으로 설정합니다.
-    //    이것이 CPU가 PIO의 동작 모드(RX/TX)를 제어하는 핵심입니다.
+    // 2. Set the pin direction to input.
+    //    This is how the CPU controls the PIO operating mode (RX/TX).
     pio_sm_set_consecutive_pindirs(dreamcast_pio, dreamcast_sm, DREAMCAST_MAPLE_A_PIN, 2, false); // false = Input
     
-    // 3. Pico SDK의 pio_gpio_init()을 호출하여 해당 핀들이 PIO에 의해 제어되도록 설정합니다.
+    // 3. Call the Pico SDK's pio_gpio_init() so those pins are driven by the PIO.
     pio_gpio_init(dreamcast_pio, DREAMCAST_MAPLE_A_PIN);
     pio_gpio_init(dreamcast_pio, DREAMCAST_MAPLE_A_PIN + 1);
 
-    // 4. PIO 프로그램 카운터(PC)를 RX 섹션의 시작점으로 강제 이동시킵니다.
+    // 4. Force the PIO program counter (PC) to the start of the RX section.
     const uint offset_rx = 7; // Manually set offset for rx_entry (SDK < 1.5.0 compatible)
     pio_sm_exec(dreamcast_pio, dreamcast_sm, pio_encode_jmp(dreamcast_offset + offset_rx));
     
-    // 5. FIFO를 비워 이전에 남아있을 수 있는 데이터를 제거합니다.
+    // 5. Drain the FIFO to clear any leftover data.
     pio_sm_clear_fifos(dreamcast_pio, dreamcast_sm);
 
-    // 6. 모든 설정이 완료되었으므로, 상태 머신을 활성화하여 리스닝을 시작합니다.
+    // 6. With setup complete, enable the state machine to start listening.
     pio_sm_set_enabled(dreamcast_pio, dreamcast_sm, true);
 
     maple_state = LISTENING;
 }
 
 
-// ★★★ sendDreamcastReport 함수 (완전 재작성) ★★★
-// 이 함수는 CPU가 준비한 응답 프레임을 PIO를 통해 전송합니다.
+// ★★★ sendDreamcastReport function (fully rewritten) ★★★
+// This function transmits the response frame prepared by the CPU via the PIO.
 void SerialInputAddon::sendDreamcastReport(const uint8_t* report_data, size_t len) {
     pio_sm_set_enabled(dreamcast_pio, dreamcast_sm, false);
     pio_sm_set_consecutive_pindirs(dreamcast_pio, dreamcast_sm, DREAMCAST_MAPLE_A_PIN, 2, true);
@@ -209,7 +209,7 @@ void SerialInputAddon::sendDreamcastReport(const uint8_t* report_data, size_t le
         pio_sm_put_blocking(dreamcast_pio, dreamcast_sm, word);
     }
 
-    // ★★★ sleep_us() 대신 TX FIFO가 비워질 때까지 대기 ★★★
+    // ★★★ Wait for the TX FIFO to drain instead of using sleep_us() ★★★
     while (!pio_sm_is_tx_fifo_empty(dreamcast_pio, dreamcast_sm)) {
         tight_loop_contents();
     }
@@ -218,45 +218,45 @@ void SerialInputAddon::sendDreamcastReport(const uint8_t* report_data, size_t le
     startMapleListen(); 
 }
 
-// ★★★ 드림캐스트 출력/처리 메인 함수 (완전 재작성) ★★★
+// ★★★ Main Dreamcast output/handling function (fully rewritten) ★★★
 // src/addons/serial_input.cpp
 
-// ★★★ 최종 완성된 processDreamcastOutput 함수 ★★★
+// ★★★ Final completed processDreamcastOutput function ★★★
 void SerialInputAddon::processDreamcastOutput(const GamepadState& state) {
-    // --- Step 1: 현재 상태 확인 ---
-    // PIO가 데이터를 수신할 준비가 된 'LISTENING' 상태가 아니면 통신 충돌 방지를 위해 즉시 종료합니다.
+    // --- Step 1: check current state ---
+    // If the PIO is not in the 'LISTENING' state (ready to receive), return immediately to avoid bus collision.
     if (maple_state != LISTENING) {
         return;
     }
 
-    // --- Step 2: 수신된 데이터 확인 및 처리 ---
-    // PIO의 RX FIFO(수신 버퍼)에 데이터가 있는지 확인합니다.
+    // --- Step 2: check and process received data ---
+    // Check whether the PIO's RX FIFO (receive buffer) holds data.
     if (pio_sm_get_rx_fifo_level(dreamcast_pio, dreamcast_sm) > 0) {
         
-        // ★★★ 버그 수정: 데이터 수신 감지 시, 즉시 타임아웃 타이머를 갱신합니다. ★★★
-        // 이렇게 해야 정상 통신 중에 PIO가 비활성화되는 것을 막을 수 있습니다.
+        // ★★★ Bug fix: refresh the timeout timer immediately when data is received. ★★★
+        // This prevents the PIO from being disabled during normal communication.
         last_dreamcast_rx_time = time_us_32();
 
-        // [안정성 로직] FIFO에 쌓인 모든 요청을 읽어내어 가장 최신 요청 하나만 남깁니다.
-        // 이는 시스템 지연 발생 시, 이미 시간 초과된 오래된 요청들을 무시하고
-        // 가장 최근 요청에 응답하여 통신을 복구하기 위함입니다.
+        // [Stability] Read out all queued requests in the FIFO, keeping only the latest.
+        // Under system latency this discards already-timed-out stale requests and
+        // responds to the most recent request to recover communication.
         uint32_t command_word;
         while (pio_sm_get_rx_fifo_level(dreamcast_pio, dreamcast_sm) > 0) {
             command_word = pio_sm_get(dreamcast_pio, dreamcast_sm);
         }
 
-        // --- Step 3: 명령어 분석 및 응답 생성 ---
+        // --- Step 3: parse command and build response ---
         uint8_t command = (command_word >> 8) & 0xFF;
         uint8_t response_packet[32];
         size_t response_len = 0;
 
         switch (command) {
             case MAPLE_COMMAND_DEVINFO: {
-                // "나는 누구인가"에 대한 응답: "나는 표준 Dreamcast 컨트롤러입니다."
+                // Answer to "who am I": "I am a standard Dreamcast controller."
                 static const uint8_t dev_info_response[] = {
-                    // --- Maple Bus 프레임 헤더 ---
+                    // --- Maple Bus frame header ---
                     0x05, 0xFE, 0x00, 0x05, 
-                    // --- 데이터 페이로드 (Little Endian으로 분해) ---
+                    // --- data payload (decomposed Little Endian) ---
                     0x00, 0x00, 0x00, 0x01, // 0x01000000 (DREAMCAST_FUNC_CONTROLLER)
                     0x00, 0x00, 0x00, 0x00, 
                     0x00, 0x00, 0x00, 0x00,
@@ -271,65 +271,65 @@ void SerialInputAddon::processDreamcastOutput(const GamepadState& state) {
             }
 
             case MAPLE_COMMAND_GETCOND: {
-                // "버튼 상태는 어떤가"에 대한 응답
-                response_len = 16; // 4 words (헤더+기능코드+데이터)
+                // Answer to "what is the button state"
+                response_len = 16; // 4 words (header+function code+data)
                 memset(response_packet, 0, response_len);
 
-                // 헤더
-                response_packet[0] = 0x08; // 응답 코드: 데이터 전송
-                response_packet[1] = 0xFE; // 수신 주소: To Host
-                response_packet[2] = 0x00; // 발신 주소: Port A
-                response_packet[3] = 0x02; // 데이터 길이: 2 words (8 bytes)
+                // header
+                response_packet[0] = 0x08; // response code: data transfer
+                response_packet[1] = 0xFE; // destination address: To Host
+                response_packet[2] = 0x00; // source address: Port A
+                response_packet[3] = 0x02; // data length: 2 words (8 bytes)
 
-                // 페이로드
+                // payload
                 ((uint32_t*)response_packet)[1] = DREAMCAST_FUNC_CONTROLLER;
                 uint8_t* controller_data = &response_packet[8];
 
-                // 버튼 상태 (Active Low: 눌리면 0)
+                // button state (Active Low: 0 when pressed)
                 uint16_t buttons = 0xFFFF;
-                if (state.buttons & GAMEPAD_MASK_B3) buttons &= ~(1 << 0); // C 버튼 (GP2040 B3/X)
-                if (state.buttons & GAMEPAD_MASK_B4) buttons &= ~(1 << 1); // B 버튼 (GP2040 B4/Y)
-                if (state.buttons & GAMEPAD_MASK_B1) buttons &= ~(1 << 2); // A 버튼 (GP2040 B1/A)
-                if (state.buttons & GAMEPAD_MASK_B2) buttons &= ~(1 << 3); // X 버튼 (GP2040 B2/B)
+                if (state.buttons & GAMEPAD_MASK_B3) buttons &= ~(1 << 0); // C button (GP2040 B3/X)
+                if (state.buttons & GAMEPAD_MASK_B4) buttons &= ~(1 << 1); // B button (GP2040 B4/Y)
+                if (state.buttons & GAMEPAD_MASK_B1) buttons &= ~(1 << 2); // A button (GP2040 B1/A)
+                if (state.buttons & GAMEPAD_MASK_B2) buttons &= ~(1 << 3); // X button (GP2040 B2/B)
                 if (state.dpad & GAMEPAD_MASK_UP)    buttons &= ~(1 << 4);
                 if (state.dpad & GAMEPAD_MASK_DOWN)  buttons &= ~(1 << 5);
                 if (state.dpad & GAMEPAD_MASK_LEFT)  buttons &= ~(1 << 6);
                 if (state.dpad & GAMEPAD_MASK_RIGHT) buttons &= ~(1 << 7);
-                if (state.buttons & GAMEPAD_MASK_S2) buttons &= ~(1 << 9); // Start 버튼
+                if (state.buttons & GAMEPAD_MASK_S2) buttons &= ~(1 << 9); // Start button
 
-                // 데이터 버퍼에 값 채우기
+                // fill values into the data buffer
                 controller_data[0] = buttons & 0xFF;
                 controller_data[1] = (buttons >> 8) & 0xFF;
                 controller_data[2] = state.rt;
                 controller_data[3] = state.lt;
                 controller_data[4] = state.lx >> 8;
                 controller_data[5] = state.ly >> 8;
-                controller_data[6] = 0x80; // 2nd Stick X (중립)
-                controller_data[7] = 0x80; // 2nd Stick Y (중립)
+                controller_data[6] = 0x80; // 2nd Stick X (neutral)
+                controller_data[7] = 0x80; // 2nd Stick Y (neutral)
                 break;
             }
-            default: // 모르는 명령어는 무시
+            default: // ignore unknown commands
                 break;
         }
 
-        // --- Step 4: 응답 전송 ---
+        // --- Step 4: send response ---
         if (response_len > 0) {
-            response_packet[0] |= MAPLE_FRAME_LAST_WORD; // 마지막 프레임 플래그 설정
-            response_packet[response_len - 1] = calculateMapleCrc(response_packet, response_len - 1); // CRC 계산 및 추가
-            sendDreamcastReport(response_packet, response_len); // PIO로 전송
+            response_packet[0] |= MAPLE_FRAME_LAST_WORD; // set last-frame flag
+            response_packet[response_len - 1] = calculateMapleCrc(response_packet, response_len - 1); // compute and append CRC
+            sendDreamcastReport(response_packet, response_len); // transmit via PIO
         }
     }
 }
 
 // ========================================
-// Addon 사용 가능 여부 체크
+// Check whether the addon is available
 // ========================================
 bool SerialInputAddon::available() {    
     return true;
 }
 
 // ========================================
-// UART 안전성 체크
+// UART safety check
 // ========================================
 bool SerialInputAddon::checkUartSafety() {
     const GamepadOptions& options = Storage::getInstance().getGamepadOptions();
@@ -337,49 +337,49 @@ bool SerialInputAddon::checkUartSafety() {
 }
 
 // ========================================
-// WS2812 LED 초기화 (RP2040 Zero) - 안전한 버전
+// WS2812 LED init (RP2040 Zero) - safe version
 // ========================================
 #ifdef USE_WS2812_LED
 
 void SerialInputAddon::setupWS2812() {
-    // 1. USB 호스트가 사용하는 pio0을 피해 **pio1을 명시적으로 선택**합니다.
-    //    이것이 이 문제의 가장 핵심적인 해결책입니다.
+    // 1. Explicitly select **pio1**, avoiding pio0 used by the USB host.
+    //    This is the key fix for the issue.
     PIO pio = pio1;
 
-    // 2. pio1에서 사용 가능한 State Machine(SM)을 찾습니다.
-    //    'true' 옵션은 만약 사용 가능한 SM이 없으면 시스템을 멈추게 합니다.
-    //    이것은 다른 Addon이 pio1까지 모두 사용하고 있는 극히 드문 경우를
-    //    진단하기 위해 유용합니다.
+    // 2. Find an available state machine (SM) on pio1.
+    //    The 'true' option halts the system if no SM is available.
+    //    This helps diagnose the rare case where other addons have consumed
+    //    all of pio1 as well.
     int sm = pio_claim_unused_sm(pio, true);
 
-    // 3. NeoPico에게 **정확한 리소스(pio1, 그리고 방금 찾은 sm)**를 알려주며 초기화합니다.
-    //    - WS2812_PIN: LED 데이터 핀 번호 (16)
-    //    - 1           : 제어할 LED 개수 (안전하게 1개로 시작)
-    //    - LED_FORMAT_GRB: 표준 WS2812 포맷
-    //    - pio         : 우리가 지정한 pio1
-    //    - sm          : pio1에서 찾은 비어있는 State Machine
+    // 3. Initialize NeoPico with **the exact resources (pio1 and the just-found sm)**.
+    //    - WS2812_PIN: LED data pin number (16)
+    //    - 1           : number of LEDs to drive (start safely with 1)
+    //    - LED_FORMAT_GRB: standard WS2812 format
+    //    - pio         : the pio1 we specified
+    //    - sm          : the free state machine found on pio1
     neoPico.Setup(WS2812_PIN, 1, LED_FORMAT_GRB, pio, sm);
 
-    // 4. 초기화 후 모든 LED를 끕니다.
+    // 4. Turn off all LEDs after init.
     neoPico.Off();
 }
 
 void SerialInputAddon::setLEDColor(uint8_t r, uint8_t g, uint8_t b) {
-    // 1. r, g, b 값을 하나의 32비트 RGB 색상 값으로 합칩니다.
-    //    NeoPico 클래스는 이 포맷을 입력으로 받습니다.
+    // 1. Combine r, g, b into a single 32-bit RGB color value.
+    //    The NeoPico class takes this format as input.
     uint32_t pixel_color = (r << 8) | (g << 16) | b;
 
-    // 2. NeoPico의 PutPixel 함수를 호출하여 LED 색상을 설정합니다.
-    //    - 이 함수는 내부적으로 RGB를 GRB로 변환하고,
-    //      설정된 PIO를 통해 LED에 데이터를 전송합니다.
-    //    - PutPixel은 '블로킹' 함수이므로, 데이터 전송이 끝날 때까지 기다립니다.
-    //      (LED가 1개이므로 거의 즉시 완료됩니다.)
+    // 2. Call NeoPico's PutPixel to set the LED color.
+    //    - This function internally converts RGB to GRB and
+    //      sends the data to the LED over the configured PIO.
+    //    - PutPixel is 'blocking', so it waits until the transfer finishes.
+    //      (With 1 LED it completes almost instantly.)
     neoPico.PutPixel(pixel_color);
 }
 #endif
 
 // ========================================
-// 초기화
+// Initialize
 // ========================================
 void SerialInputAddon::setup() {
     #ifdef DEBUG_MODE
@@ -387,33 +387,33 @@ void SerialInputAddon::setup() {
     debugPrint("SerialInputAddon setup started (Player %d)", PLAYER_NUMBER);
     #endif
 
-    // ===== Step 1: UART 초기화 (빠름, 블로킹 없음) =====
+    // ===== Step 1: UART init (fast, non-blocking) =====
     uart_init(SERIAL_UART, SERIAL_BAUDRATE);
     gpio_set_function(SERIAL_RX_PIN, GPIO_FUNC_UART);
     uart_set_hw_flow(SERIAL_UART, false, false);
     uart_set_format(SERIAL_UART, 8, 1, UART_PARITY_NONE);
     uart_set_fifo_enabled(SERIAL_UART, true);
     
-    // ===== Step 2: WS2812 LED 초기화 (안전하게) =====
-    // LED 상태 변수 초기화
+    // ===== Step 2: WS2812 LED init (safely) =====
+    // Initialize LED state variables
     led_state_last_time = 0;
     led_mode_change_time = 0;
     led_blink_state = false;
-    led_init_state = NOT_STARTED; // 초기화 애니메이션은 아직 시작 안 함
-    led_last_mode = 0xFF; // 초기화 추가
+    led_init_state = NOT_STARTED; // init animation not started yet
+    led_last_mode = 0xFF; // extra init
 
     #ifdef USE_WS2812_LED
     setupWS2812();
     
     #endif
     
-    // ===== Step 3: OLED 초기화 (빠르고 안전하게) =====
+    // ===== Step 3: OLED init (fast and safe) =====
     #ifdef USE_OLED_DISPLAY
     #ifdef DEBUG_MODE
     debugPrint("Checking OLED...");
     #endif
     
-    // ✅ 단 한 번만 시도, 실패 시 즉시 계속 진행
+    // ✅ Try only once; on failure continue immediately
     oled_available = checkOLEDAvailable();
     
     if (oled_available) {
@@ -424,7 +424,7 @@ void SerialInputAddon::setup() {
         if (setupOLED()) {
             oled_clear();
             
-            // ✅ 간단한 초기화 메시지
+            // ✅ simple init message
             char msg[32];
             sprintf(msg, "P%d SERIAL", PLAYER_NUMBER);
             oled_draw_string(10, 10, msg, 2);
@@ -440,7 +440,7 @@ void SerialInputAddon::setup() {
     }
     #endif  
     
-    // ===== Step 4: 상태 초기화 (빠름) =====
+    // ===== Step 4: state reset (fast) =====
     memset(&serial_state, 0, sizeof(serial_state));
     memset(&message_buffer, 0, sizeof(message_buffer));
     previous_state = GamepadState();
@@ -454,7 +454,7 @@ void SerialInputAddon::setup() {
     mode_change_time = 0;
     keyboard_mapping_initialized = false;
     
-    // ===== Step 5: Addon 활성화 =====
+    // ===== Step 5: enable addon =====
     addon_enabled = true;
     
     #ifdef DEBUG_MODE
@@ -462,7 +462,7 @@ void SerialInputAddon::setup() {
     #endif
     gpio_init(DREAMCAST_PIO_ENABLE_PIN);
     gpio_set_dir(DREAMCAST_PIO_ENABLE_PIN, GPIO_OUT);
-    gpio_put(DREAMCAST_PIO_ENABLE_PIN, 1); // 기본 상태를 '대기' (HIGH)로 설정
+    gpio_put(DREAMCAST_PIO_ENABLE_PIN, 1); // set default state to 'idle' (HIGH)
 
     gpio_init(DREAMCAST_SENSE_PIN);
     gpio_set_dir(DREAMCAST_SENSE_PIN, GPIO_OUT);
@@ -472,18 +472,18 @@ void SerialInputAddon::setup() {
     startMapleListen(); 
 
     maple_state = LISTENING;
-    last_dreamcast_rx_time = time_us_32(); // 타임아웃 타이머 초기화
-    dreamcast_pio_active = true;           // PIO 활성 상태로 시작
+    last_dreamcast_rx_time = time_us_32(); // init timeout timer
+    dreamcast_pio_active = true;           // start with PIO active
 
     // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-    // ★★★ 2. 레벨 시프터 활성화 로직 추가 (P1 전용, 모든 초기화 완료 후) ★★★
+    // ★★★ 2. Add level-shifter enable logic (P1 only, after all init completes) ★★★
     // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
     #if PLAYER_NUMBER == 1
-        // 제어 핀을 초기화하고 출력으로 설정합니다.
+        // Init the control pin and set it as output.
         gpio_init(LEVEL_SHIFTER_ENABLE_PIN);
         gpio_set_dir(LEVEL_SHIFTER_ENABLE_PIN, GPIO_OUT);
         
-        // OE 핀에 HIGH 신호를 보내 TXS0108E를 활성화합니다.
+        // Drive the OE pin HIGH to enable the TXS0108E.
         gpio_put(LEVEL_SHIFTER_ENABLE_PIN, 1);
     #endif
 
@@ -494,11 +494,11 @@ void SerialInputAddon::setup() {
     debugPrint("OLED status: %s", oled_available ? "ENABLED" : "DISABLED");
     #endif
     
-    // ✅ 전체 setup() 시간: 약 600ms 이내
+    // ✅ Total setup() time: within ~600ms
 }
 
 // ========================================
-// 디버그 출력 (USB CDC)
+// Debug output (USB CDC)
 // ========================================
 #ifdef DEBUG_MODE
 void SerialInputAddon::debugPrint(const char* format, ...) {
@@ -538,29 +538,29 @@ void SerialInputAddon::printKeyboardMapping() {
 #endif
 
 // ========================================
-// 전처리 (데이터 수신)
+// Preprocess (data receive)
 // ========================================
 void SerialInputAddon::preprocess() {
     if (!addon_enabled) return;
     
-    // 시리얼 데이터 수신
+    // Receive serial data
     receiveSerialData();
     
-    // 연결 타임아웃 체크
+    // Connection timeout check
     if (time_us_32() - last_receive_time > CONNECTION_TIMEOUT_US) {
         if (connection_timeout == false) {
-            // '연결됨' -> '끊김' 상태로 전환되는 바로 그 순간
+            // The exact moment state goes 'connected' -> 'disconnected'
             #ifdef DEBUG_MODE
             debugPrint("Connection timeout detected");
             #endif
             memset(&serial_state, 0, sizeof(serial_state));
         }
-        connection_timeout = true; // 타임아웃 조건 만족 시, 항상 true로 설정
+        connection_timeout = true; // Set true whenever the timeout condition holds
     } else {
-        connection_timeout = false; // 타임아웃 조건 만족 안하면, 항상 false로 설정
+        connection_timeout = false; // Set false whenever the timeout condition is not met
     }
     
-    // LED 상태 업데이트
+    // Update LED state
     updateStatusLED();
 #ifdef USE_OLED_DISPLAY
     #ifdef OLED_STYLE_FULL
@@ -578,7 +578,7 @@ void SerialInputAddon::preprocess() {
 }
 
 // ========================================
-// 메인 처리
+// Main process
 // ========================================
 void SerialInputAddon::process() {
     if (!addon_enabled) return;
@@ -586,12 +586,12 @@ void SerialInputAddon::process() {
     Gamepad* gamepad = Storage::getInstance().GetGamepad();
     GamepadOptions& options = Storage::getInstance().getGamepadOptions();
     
-    // ===== KeyboardMapping 지연 초기화 (1회만) =====
+    // ===== KeyboardMapping lazy init (once) =====
     static bool keyboard_init_attempted = false;
     if (!keyboard_init_attempted && addon_enabled) {
         keyboard_init_attempted = true;
         
-        // 부팅 후 시간 여유 두기 (500ms)
+        // Leave time after boot (500ms)
         static uint32_t init_time = 0;
         if (init_time == 0) {
             init_time = to_ms_since_boot(get_absolute_time());
@@ -604,63 +604,63 @@ void SerialInputAddon::process() {
         }
     }
 
-    // ===== Step 1: 연결 복구 처리 (초기화 제거!) =====
+    // ===== Step 1: connection-recovery handling (no reset!) =====
     handleConnectionRecovery(gamepad);
     
-    // ===== Step 2: 연결 상태 체크 =====
+    // ===== Step 2: connection state check =====
     if (connection_timeout) {
-        // ✅ UART 없으면 GPIO만 사용 (이미 메인 루프에서 처리됨)
+        // ✅ Without UART use GPIO only (already handled in the main loop)
         return;
     }
     
-    // ★★★★★ Dreamcast PIO 타임아웃 관리 (새로운 로직) ★★★★★
+    // ★★★★★ Dreamcast PIO timeout management (new logic) ★★★★★
     if (serial_state.input_mode == ARDUINO_MODE_DREAMCAST) {
         uint32_t now = time_us_32();
 
-        // 1. 타임아웃이 발생했고, PIO가 활성 상태였다면?
+        // 1. A timeout occurred and the PIO was active?
         if ((now - last_dreamcast_rx_time > DREAMCAST_RX_TIMEOUT_US) && dreamcast_pio_active) {
             #ifdef DEBUG_MODE
             debugPrint("Dreamcast RX timeout. Deactivating PIO wait.");
             #endif
-            gpio_put(DREAMCAST_PIO_ENABLE_PIN, 1); // PIO를 안전한 루프로 JMP시킴
+            gpio_put(DREAMCAST_PIO_ENABLE_PIN, 1); // JMP the PIO to a safe loop
             dreamcast_pio_active = false;
         }
-        // 2. PIO가 비활성 상태인데, 다시 활성화해야 한다면? (예: 모드 진입 직후)
+        // 2. PIO inactive but needs re-enabling? (e.g. right after entering a mode)
         else if (!dreamcast_pio_active) {
             #ifdef DEBUG_MODE
             debugPrint("Re-activating PIO for Dreamcast mode.");
             #endif
-            gpio_put(DREAMCAST_PIO_ENABLE_PIN, 0); // PIO가 통신을 감지하도록 함
-            last_dreamcast_rx_time = now; // 타임아웃 타이머 재시작
+            gpio_put(DREAMCAST_PIO_ENABLE_PIN, 0); // Let the PIO detect communication
+            last_dreamcast_rx_time = now; // restart the timeout timer
             dreamcast_pio_active = true;
         }
     } else {
-        // Dreamcast 모드가 아닐 때는 항상 PIO를 비활성화 상태로 둡니다.
+        // When not in Dreamcast mode, always keep the PIO disabled.
         if (dreamcast_pio_active) {
             gpio_put(DREAMCAST_PIO_ENABLE_PIN, 1);
             dreamcast_pio_active = false;
         }
     }
 
-    // ★★★ 드림캐스트 모드 특별 처리 ★★★
+    // ★★★ Dreamcast mode special handling ★★★
     if (serial_state.input_mode == ARDUINO_MODE_DREAMCAST) {
         Gamepad* gamepad = Storage::getInstance().GetGamepad();
-        processGamepadModeInput(gamepad); // 입력 병합
-        processDreamcastOutput(gamepad->state); // 드림캐스트로 출력
-        return; // USB 처리 건너뛰기
+        processGamepadModeInput(gamepad); // merge input
+        processDreamcastOutput(gamepad->state); // output to Dreamcast
+        return; // skip USB handling
     }
     
-    // ★★★ 바로 여기서 JVS 모드를 직접 확인하고 입력을 차단 ★★★
+    // ★★★ Check JVS mode right here and block input ★★★
     if (serial_state.input_mode == ARDUINO_MODE_JVS) {
-        // JVS 모드일 때는 USB 입력을 처리하지 않고 함수를 종료합니다.
+        // In JVS mode, exit without processing USB input.
         return; 
     }
     
-    // ===== Step 3: 모드 변환 =====
+    // ===== Step 3: mode conversion =====
     InputMode targetMode = convertToGP2040Mode(serial_state.input_mode);
     InputMode currentMode = options.inputMode;
     
-    // ===== Step 4: 모드 자동 변경 처리 =====
+    // ===== Step 4: auto mode-change handling =====
     if (currentMode != targetMode) {
         if (!mode_change_pending) {
             mode_change_pending = true;
@@ -690,10 +690,10 @@ void SerialInputAddon::process() {
         mode_change_pending = false;
     }
     
-    // ===== Step 5: GPIO 상태 백업 (선택적) =====
+    // ===== Step 5: GPIO state backup (optional) =====
     memcpy(&previous_state, &gamepad->state, sizeof(GamepadState));
     
-    // ===== Step 6: UART 데이터를 GPIO에 병합 =====
+    // ===== Step 6: merge UART data into GPIO =====
     if (currentMode == INPUT_MODE_KEYBOARD) {
         processKeyboardModeInput(gamepad);
     } else {
@@ -710,12 +710,12 @@ void SerialInputAddon::process() {
 }
 
 // ========================================
-// 연결 복구 처리 (수정됨 - GPIO 유지!)
+// Connection-recovery handling (revised - keeps GPIO!)
 // ========================================
 void SerialInputAddon::handleConnectionRecovery(Gamepad* gamepad) {
     if (was_timeout && !connection_timeout) {
-        // ✅ 연결 복구 시 GPIO 입력 유지
-        // clearGamepadState(gamepad);  ← 제거!
+        // ✅ Keep GPIO input on reconnect
+        // clearGamepadState(gamepad);  ← removed!
         was_timeout = false;
         
         #ifdef DEBUG_MODE
@@ -723,8 +723,8 @@ void SerialInputAddon::handleConnectionRecovery(Gamepad* gamepad) {
         #endif
     } else if (!was_timeout && connection_timeout) {
         was_timeout = true;
-        // ✅ 타임아웃 시에도 GPIO 입력 유지
-        // clearGamepadState(gamepad);  ← 제거!
+        // ✅ Keep GPIO input even on timeout
+        // clearGamepadState(gamepad);  ← removed!
         
         #ifdef DEBUG_MODE
         debugPrint("Connection timeout - falling back to GPIO only");
@@ -733,10 +733,10 @@ void SerialInputAddon::handleConnectionRecovery(Gamepad* gamepad) {
 }
 
 // ========================================
-// 상태 업데이트 (LED + OLED)
+// State update (LED + OLED)
 // ========================================
 void SerialInputAddon::updateStatusLED() {
-    // static 변수들을 모두 제거함
+    // all static variables removed
     uint32_t now = time_us_32();
     
     #ifdef USE_WS2812_LED
@@ -755,13 +755,13 @@ void SerialInputAddon::updateStatusLED() {
             return;
         } else {
             led_init_state = FINISHED;
-            // 상태 전환 시 타이머 초기화 (안전장치)
+            // reset timer on state transition (safety)
             led_state_last_time = now;
             led_mode_change_time = now;
         }
     } else {
         if (!connection_timeout) {
-            if (serial_state.input_mode != led_last_mode) { // 'led_last_mode' 사용
+            if (serial_state.input_mode != led_last_mode) { // uses 'led_last_mode'
                 led_last_mode = serial_state.input_mode;
                 led_mode_change_time = now;
             }
@@ -769,47 +769,47 @@ void SerialInputAddon::updateStatusLED() {
             uint8_t r = 0, g = 0, b = 0;
             switch (serial_state.input_mode) {
                 case ARDUINO_MODE_KEYBOARD:
-                    r = 60; g = 180; b = 75;  // 초록
+                    r = 60; g = 180; b = 75;  // green
                     break;
                 case ARDUINO_MODE_XINPUT:
-                    r = 0; g = 130; b = 200;  // 파랑
+                    r = 0; g = 130; b = 200;  // blue
                     break;
                 case ARDUINO_MODE_SWITCH:
-                    r = 245; g = 130; b = 48;  // 주황
+                    r = 245; g = 130; b = 48;  // orange
                     break;
                 case ARDUINO_MODE_PS3:
-                    r = 145; g = 30; b = 180;  // 보라색
+                    r = 145; g = 30; b = 180;  // purple
                     break;
                 case ARDUINO_MODE_PS4:
-                    r = 240; g = 50; b = 230;  // 자홍
+                    r = 240; g = 50; b = 230;  // magenta
                     break;
                 case ARDUINO_MODE_PS5:
-                    r = 255; g = 215; b = 180;  // 부드러운 살구
+                    r = 255; g = 215; b = 180;  // soft apricot
                     break;
                 case ARDUINO_MODE_XBOX:
-                    r = 0; g = 0; b = 125;  // 어두운 남색
+                    r = 0; g = 0; b = 125;  // dark navy
                     break;
                 case ARDUINO_MODE_JVS:
-                    r = 245; g = 130; b = 48;  // 활기찬 주황
+                    r = 245; g = 130; b = 48;  // vivid orange
                     break;
                 case ARDUINO_MODE_DREAMCAST: 
-                    r=170; g=110; b=40;   // 자연의 갈색
+                    r=170; g=110; b=40;   // natural brown
                     break;
                 default:
-                    r = 230; g = 25; b = 75; // 빨간색 (오류)
+                    r = 230; g = 25; b = 75; // red (error)
                     break;
             }
             
-            if (now - led_mode_change_time < 1000000) { // 'led_mode_change_time' 사용
-                if ((now / 150000) % 2 == 0) setLEDColor(r, g, b); // 접속 안됨.
+            if (now - led_mode_change_time < 1000000) { // uses 'led_mode_change_time'
+                if ((now / 150000) % 2 == 0) setLEDColor(r, g, b); // not connected.
                 else setLEDColor(0, 0, 0);
             } else {
                 setLEDColor(r, g, b);
             }
         } else {
-            if (now - led_state_last_time > 500000) { // 'led_state_last_time' 사용
-                led_blink_state = !led_blink_state; // 'led_blink_state' 사용
-                if (led_blink_state) setLEDColor(128, 128, 128); // 중간 회색
+            if (now - led_state_last_time > 500000) { // uses 'led_state_last_time'
+                led_blink_state = !led_blink_state; // uses 'led_blink_state'
+                if (led_blink_state) setLEDColor(128, 128, 128); // medium gray
                 else setLEDColor(0, 0, 0);
                 led_state_last_time = now;
             }
@@ -825,7 +825,7 @@ void SerialInputAddon::updateStatusLED() {
 }
 
 // ========================================
-// 키보드 모드 입력 처리 (수정됨 - 병합 방식!)
+// Keyboard-mode input handling (revised - merge style!)
 // ========================================
 void SerialInputAddon::processKeyboardModeInput(Gamepad* gamepad) {
     uint32_t current_buttons = (PLAYER_NUMBER == 1) ? 
@@ -859,20 +859,20 @@ void SerialInputAddon::processKeyboardModeInput(Gamepad* gamepad) {
     if (serial_lt > gamepad->state.lt) gamepad->state.lt = serial_lt;
     if (serial_rt > gamepad->state.rt) gamepad->state.rt = serial_rt;
     
-    // 방향키 상태
+    // D-pad state
     bool up    = (current_buttons & (1 << BIT_UP)) != 0;
     bool down  = (current_buttons & (1 << BIT_DOWN)) != 0;
     bool right = (current_buttons & (1 << BIT_RIGHT)) != 0;
     bool left  = (current_buttons & (1 << BIT_LEFT)) != 0;
     
     if (analog_mode) {
-        // 추가 버튼 매핑
+        // extra button mapping
         if (up)    gamepad->state.buttons |= GAMEPAD_MASK_E1;
         if (down)  gamepad->state.buttons |= GAMEPAD_MASK_E2;
         if (left)  gamepad->state.buttons |= GAMEPAD_MASK_E3;
         if (right) gamepad->state.buttons |= GAMEPAD_MASK_E4;
     } else {
-        // 일반 모드
+        // normal mode
         if (up)    gamepad->state.dpad |= GAMEPAD_MASK_UP;
         if (down)  gamepad->state.dpad |= GAMEPAD_MASK_DOWN;
         if (left)  gamepad->state.dpad |= GAMEPAD_MASK_LEFT;
@@ -886,14 +886,14 @@ void SerialInputAddon::processKeyboardModeInput(Gamepad* gamepad) {
 }
 
 // ========================================
-// 게임패드 모드 입력 처리 (수정됨 - 병합 방식!)
+// Gamepad-mode input handling (revised - merge style!)
 // ========================================
 void SerialInputAddon::processGamepadModeInput(Gamepad* gamepad) {
     uint32_t current_buttons = (PLAYER_NUMBER == 1) ? 
                                serial_state.p1_buttons : 
                                serial_state.p2_buttons;
     
-    // 패드 모드 확인
+    // check pad mode
     uint8_t check_flags = serial_state.modes & 0x0F;
     uint8_t pad_mode = PAD_MODE_DPAD;
     
@@ -909,11 +909,11 @@ void SerialInputAddon::processGamepadModeInput(Gamepad* gamepad) {
         else if (p2_ranl) pad_mode = PAD_MODE_RANALOG;
     }
     
-    // ===== 버튼 병합 (초기화 제거!) =====
-    // ✅ GPIO 입력 유지!
-    // gamepad->state.buttons = 0;  ← 제거!
+    // ===== button merge (no reset!) =====
+    // ✅ keep GPIO input!
+    // gamepad->state.buttons = 0;  ← removed!
     
-    // ✅ UART 데이터 추가
+    // ✅ add UART data
     if (current_buttons & (1UL << BIT_SELECT)) gamepad->state.buttons |= GAMEPAD_MASK_S1;
     if (current_buttons & (1UL << BIT_HOME))   gamepad->state.buttons |= GAMEPAD_MASK_A1;
     if (current_buttons & (1UL << BIT_START))  gamepad->state.buttons |= GAMEPAD_MASK_S2;
@@ -927,29 +927,29 @@ void SerialInputAddon::processGamepadModeInput(Gamepad* gamepad) {
     if (current_buttons & (1UL << BIT_RB)) gamepad->state.buttons |= GAMEPAD_MASK_R1;
     if (current_buttons & (1UL << BIT_TOUCH)) gamepad->state.buttons |= GAMEPAD_MASK_A2; // ★ Touchpad (PS4) / Capture (Switch)
     
-    // 트리거 병합
+    // merge triggers
     uint8_t serial_lt = (current_buttons & (1UL << BIT_LT)) ? 255 : 0;
     uint8_t serial_rt = (current_buttons & (1UL << BIT_RT)) ? 255 : 0;
     if (serial_lt > gamepad->state.lt) gamepad->state.lt = serial_lt;
     if (serial_rt > gamepad->state.rt) gamepad->state.rt = serial_rt;
     
-    // 방향 입력
+    // directional input
     bool up    = (current_buttons & (1UL << BIT_UP)) != 0;
     bool down  = (current_buttons & (1UL << BIT_DOWN)) != 0;
     bool right = (current_buttons & (1UL << BIT_RIGHT)) != 0;
     bool left  = (current_buttons & (1UL << BIT_LEFT)) != 0;
     
-    // ===== 방향 입력 처리 (모드별) =====
+    // ===== directional input handling (per mode) =====
     switch (pad_mode) {
         case PAD_MODE_DPAD:
-            // ✅ D-pad 병합 (초기화 제거!)
-            // gamepad->state.dpad = 0;  ← 제거!
+            // ✅ merge D-pad (no reset!)
+            // gamepad->state.dpad = 0;  ← removed!
             if (up)    gamepad->state.dpad |= GAMEPAD_MASK_UP;
             if (down)  gamepad->state.dpad |= GAMEPAD_MASK_DOWN;
             if (left)  gamepad->state.dpad |= GAMEPAD_MASK_LEFT;
             if (right) gamepad->state.dpad |= GAMEPAD_MASK_RIGHT;
             
-            // ✅ 아날로그는 GPIO가 중립일 때만
+            // ✅ analog only when GPIO is neutral
             if (gamepad->state.lx == GAMEPAD_JOYSTICK_MID && 
                 gamepad->state.ly == GAMEPAD_JOYSTICK_MID) {
                 gamepad->state.lx = GAMEPAD_JOYSTICK_MID;
@@ -964,10 +964,10 @@ void SerialInputAddon::processGamepadModeInput(Gamepad* gamepad) {
             break;
             
         case PAD_MODE_LANALOG:
-            // ✅ D-pad 병합
-            // gamepad->state.dpad = 0;  ← 제거!
+            // ✅ merge D-pad
+            // gamepad->state.dpad = 0;  ← removed!
             
-            // ✅ 왼쪽 스틱은 GPIO가 중립일 때만
+            // ✅ left stick only when GPIO is neutral
             if (gamepad->state.lx == GAMEPAD_JOYSTICK_MID && 
                 gamepad->state.ly == GAMEPAD_JOYSTICK_MID) {
                 gamepad->state.lx = left ? GAMEPAD_JOYSTICK_MIN : 
@@ -976,7 +976,7 @@ void SerialInputAddon::processGamepadModeInput(Gamepad* gamepad) {
                                    (down ? GAMEPAD_JOYSTICK_MAX : GAMEPAD_JOYSTICK_MID);
             }
             
-            // 오른쪽 스틱은 GPIO 유지
+            // keep GPIO for right stick
             if (gamepad->state.rx == GAMEPAD_JOYSTICK_MID && 
                 gamepad->state.ry == GAMEPAD_JOYSTICK_MID) {
                 gamepad->state.rx = GAMEPAD_JOYSTICK_MID;
@@ -985,17 +985,17 @@ void SerialInputAddon::processGamepadModeInput(Gamepad* gamepad) {
             break;
             
         case PAD_MODE_RANALOG:
-            // ✅ D-pad 병합
-            // gamepad->state.dpad = 0;  ← 제거!
+            // ✅ merge D-pad
+            // gamepad->state.dpad = 0;  ← removed!
             
-            // 왼쪽 스틱은 GPIO 유지
+            // keep GPIO for left stick
             if (gamepad->state.lx == GAMEPAD_JOYSTICK_MID && 
                 gamepad->state.ly == GAMEPAD_JOYSTICK_MID) {
                 gamepad->state.lx = GAMEPAD_JOYSTICK_MID;
                 gamepad->state.ly = GAMEPAD_JOYSTICK_MID;
             }
             
-            // ✅ 오른쪽 스틱은 GPIO가 중립일 때만
+            // ✅ right stick only when GPIO is neutral
             if (gamepad->state.rx == GAMEPAD_JOYSTICK_MID && 
                 gamepad->state.ry == GAMEPAD_JOYSTICK_MID) {
                 gamepad->state.rx = left ? GAMEPAD_JOYSTICK_MIN : 
@@ -1008,7 +1008,7 @@ void SerialInputAddon::processGamepadModeInput(Gamepad* gamepad) {
 }
 
 // ========================================
-// Gamepad 상태 초기화
+// Reset Gamepad state
 // ========================================
 void SerialInputAddon::clearGamepadState(Gamepad* gamepad) {
     gamepad->state.dpad = 0;
@@ -1022,7 +1022,7 @@ void SerialInputAddon::clearGamepadState(Gamepad* gamepad) {
 }
 
 // ========================================
-// Gamepad 상태 병합
+// Merge Gamepad state
 // ========================================
 void SerialInputAddon::mergeGamepadStates(Gamepad* target, const GamepadState* source) {
     target->state.buttons |= source->buttons;
@@ -1046,7 +1046,7 @@ void SerialInputAddon::mergeGamepadStates(Gamepad* target, const GamepadState* s
 }
 
 // ========================================
-// 시리얼 데이터 수신
+// Receive serial data
 // ========================================
 void SerialInputAddon::receiveSerialData() {
     int bytes_processed = 0;
@@ -1055,16 +1055,16 @@ void SerialInputAddon::receiveSerialData() {
         uint8_t byte = uart_getc(SERIAL_UART);
         bytes_processed++;
         
-        // ===== 헤더 검출 =====
+        // ===== header detection =====
         if (byte == BINARY_HEADER) {
             buffer_index = 0;
             message_buffer[buffer_index++] = byte;
         }
-        // ===== 메시지 수신 중 =====
+        // ===== receiving message =====
         else if (buffer_index > 0 && buffer_index < sizeof(CompactMessage)) {
             message_buffer[buffer_index++] = byte;
             
-            // ===== 메시지 완성 =====
+            // ===== message complete =====
             if (buffer_index == sizeof(CompactMessage)) {
                 if (message_buffer[sizeof(CompactMessage) - 1] == BINARY_FOOTER) {
                     uint8_t calc_crc = calculateCRC8(message_buffer, sizeof(CompactMessage) - 2);
@@ -1076,7 +1076,7 @@ void SerialInputAddon::receiveSerialData() {
                         
                         serial_state.p1_buttons = msg.p1_buttons;
                         serial_state.p2_buttons = msg.p2_buttons;
-                        serial_state.input_mode = (msg.modes >> 4) & 0x0F; // 상위 4비트
+                        serial_state.input_mode = (msg.modes >> 4) & 0x0F; // upper 4 bits
                         serial_state.modes = msg.modes;
                         
                         serial_state.channel = (msg.channel_state >> 4) & 0x0F;
@@ -1124,7 +1124,7 @@ void SerialInputAddon::receiveSerialData() {
 }
 
 // ========================================
-// Arduino 모드를 GP2040 모드로 변환
+// Convert Arduino mode to GP2040 mode
 // ========================================
 InputMode SerialInputAddon::convertToGP2040Mode(uint8_t arduino_mode) {
     switch (arduino_mode) {
@@ -1143,16 +1143,16 @@ InputMode SerialInputAddon::convertToGP2040Mode(uint8_t arduino_mode) {
         case ARDUINO_MODE_XBOX:     
             return INPUT_MODE_XBOXORIGINAL;
         case ARDUINO_MODE_JVS:      
-            return INPUT_MODE_XINPUT; // 재부팅 대비 기본값
+            return INPUT_MODE_XINPUT; // default for reboot safety
         case ARDUINO_MODE_DREAMCAST:
-            return INPUT_MODE_XINPUT; // 재부팅 대비 기본값
+            return INPUT_MODE_XINPUT; // default for reboot safety
         default:                    
             return INPUT_MODE_XINPUT;
     }
 }
 
 // ========================================
-// CRC8 체크섬 계산
+// CRC8 checksum calculation
 // ========================================
 uint8_t SerialInputAddon::calculateCRC8(const uint8_t* data, uint8_t len) {
     uint8_t crc = 0x00;
@@ -1176,10 +1176,10 @@ uint8_t SerialInputAddon::calculateCRC8(const uint8_t* data, uint8_t len) {
 #ifdef USE_OLED_DISPLAY
 
 // ========================================
-// OLED 존재 여부 체크 (매우 안전한 버전)
+// Check for OLED presence (very safe version)
 // ========================================
 bool SerialInputAddon::checkOLEDAvailable() {
-    // ★★★ 1. 단 한 번만 실행되도록 보장 (매우 중요) ★★★
+    // ★★★ 1. Ensure it runs only once (very important) ★★★
     static bool already_checked = false;
     static bool last_result = false;
     if (already_checked) {
@@ -1191,8 +1191,8 @@ bool SerialInputAddon::checkOLEDAvailable() {
     debugPrint("Checking for OLED display (defensive method)...");
     #endif
 
-    // ★★★ 2. I2C 초기화 전, 핀 상태를 먼저 깨끗하게 설정 ★★★
-    // 이전에 I2C가 비정상 종료되었을 경우를 대비합니다.
+    // ★★★ 2. Before I2C init, clean up the pin state first ★★★
+    // Guards against a previous abnormal I2C shutdown.
     gpio_disable_pulls(OLED_I2C_SDA_PIN);
     gpio_disable_pulls(OLED_I2C_SCL_PIN);
     gpio_set_function(OLED_I2C_SDA_PIN, GPIO_FUNC_SIO);
@@ -1200,39 +1200,39 @@ bool SerialInputAddon::checkOLEDAvailable() {
     gpio_set_dir(OLED_I2C_SDA_PIN, GPIO_IN);
     gpio_set_dir(OLED_I2C_SCL_PIN, GPIO_IN);
 
-    // I2C 버스를 깨끗한 상태에서 시작
+    // Start the I2C bus from a clean state
     i2c_init(OLED_I2C_PORT, 400 * 1000);
     gpio_set_function(OLED_I2C_SDA_PIN, GPIO_FUNC_I2C);
     gpio_set_function(OLED_I2C_SCL_PIN, GPIO_FUNC_I2C);
     
-    // ★★★ 3. 내부 풀업 저항 활성화 ★★★
-    // 외부 풀업 저항이 없을 때, 버스 라인이 떠다니는(floating) 것을 방지합니다.
+    // ★★★ 3. Enable internal pull-up resistors ★★★
+    // Prevents floating bus lines when there are no external pull-ups.
     gpio_pull_up(OLED_I2C_SDA_PIN);
     gpio_pull_up(OLED_I2C_SCL_PIN);
-    sleep_ms(10); // 풀업이 안정화될 시간
+    sleep_ms(10); // time for pull-ups to settle
 
-    // ★★★ 4. 전체 검사 시간을 재는 타임아웃 설정 ★★★
+    // ★★★ 4. Set a timeout measuring the whole probe ★★★
     uint32_t start_time = time_us_32();
     int ret;
-    uint8_t dummy_data = 0; // 주소만 확인하기 위한 더미 데이터
+    uint8_t dummy_data = 0; // dummy data to probe the address only
 
-    // 매우 짧은 타임아웃(10ms)으로 쓰기를 시도합니다.
+    // Attempt a write with a very short timeout (10ms).
     ret = i2c_write_timeout_us(OLED_I2C_PORT, OLED_I2C_ADDR, &dummy_data, 1, false, 10000);
 
     uint32_t elapsed_time = time_us_32() - start_time;
 
-    // ★★★ 5. 이중 타임아웃 체크 (핵심 로직) ★★★
-    // ret < 0: SDK 함수가 타임아웃/에러를 반환함
-    // elapsed_time > 50000: 함수 자체가 50ms 이상 멈춰버림 (하드웨어 멈춤)
+    // ★★★ 5. Double timeout check (core logic) ★★★
+    // ret < 0: SDK function returned timeout/error
+    // elapsed_time > 50000: the call itself stalled >50ms (hardware hang)
     if (ret < 0 || elapsed_time > 50000) {
         #ifdef DEBUG_MODE
         debugPrint("OLED not found. ret=%d, elapsed=%lu us", ret, elapsed_time);
         #endif
 
-        // ★★★ 6. 실패 시 I2C 하드웨어를 완전히 비활성화 (가장 중요) ★★★
+        // ★★★ 6. On failure fully disable the I2C hardware (most important) ★★★
         i2c_deinit(OLED_I2C_PORT);
         
-        // GPIO 핀을 다시 입력(High-Z) 상태로 되돌려 시스템에 영향을 주지 않도록 합니다.
+        // Return the GPIO pins to input (High-Z) so they don't affect the system.
         gpio_disable_pulls(OLED_I2C_SDA_PIN);
         gpio_disable_pulls(OLED_I2C_SCL_PIN);
         gpio_set_function(OLED_I2C_SDA_PIN, GPIO_FUNC_SIO);
@@ -1248,26 +1248,26 @@ bool SerialInputAddon::checkOLEDAvailable() {
     debugPrint("OLED found successfully! ret=%d, elapsed=%lu us", ret, elapsed_time);
     #endif
 
-    // 성공했으므로 I2C를 그대로 유지합니다.
+    // Success, so keep I2C as is.
     last_result = true;
     return true;
 }
 
 // ========================================
-// OLED 명령어 전송 (안전)
+// Send OLED command (safe)
 // ========================================
 void SerialInputAddon::oled_send_cmd(uint8_t cmd) {
-    if (!oled_available) return;  // OLED 없으면 즉시 리턴
+    if (!oled_available) return;  // return immediately if no OLED
     
     uint8_t buf[2] = {0x00, cmd};
     i2c_write_timeout_us(OLED_I2C_PORT, OLED_I2C_ADDR, buf, 2, false, 10000);
 }
 
 // ========================================
-// OLED 데이터 전송 (안전)
+// Send OLED data (safe)
 // ========================================
 void SerialInputAddon::oled_send_data(uint8_t* data, size_t len) {
-    if (!oled_available) return;  // OLED 없으면 즉시 리턴
+    if (!oled_available) return;  // return immediately if no OLED
     
     uint8_t buf[len + 1];
     buf[0] = 0x40; // Data mode
@@ -1276,7 +1276,7 @@ void SerialInputAddon::oled_send_data(uint8_t* data, size_t len) {
 }
 
 // ========================================
-// OLED 초기화 (안전)
+// Init OLED (safe)
 // ========================================
 bool SerialInputAddon::setupOLED() {
     if (!oled_available) {
@@ -1287,9 +1287,9 @@ bool SerialInputAddon::setupOLED() {
     debugPrint("Initializing OLED...");
     #endif
     
-    sleep_ms(50);  // ← 100ms에서 50ms로 단축
+    sleep_ms(50);  // ← shortened from 100ms to 50ms
     
-    // OLED 초기화 시퀀스
+    // OLED init sequence
     oled_send_cmd(OLED_DISPLAY_OFF);
     oled_send_cmd(OLED_SET_DISPLAY_CLOCK_DIV);
     oled_send_cmd(0x80);
@@ -1324,7 +1324,7 @@ bool SerialInputAddon::setupOLED() {
 }
 
 // ========================================
-// OLED 화면 지우기 (안전)
+// Clear OLED screen (safe)
 // ========================================
 void SerialInputAddon::oled_clear() {
     if (!oled_available) return;
@@ -1343,14 +1343,14 @@ void SerialInputAddon::oled_clear() {
 }
 
 // ========================================
-// OLED 문자 출력 (안전)
+// Draw OLED char (safe)
 // ========================================
 void SerialInputAddon::oled_draw_char(uint8_t x, uint8_t y, char c, uint8_t size) {
     if (!oled_available) return;
     
     int char_index = -1;
     
-    // 문자 인덱스 찾기
+    // find glyph index
     if (c == ' ') {
         char_index = 0;
     } else if (c >= '0' && c <= '9') {
@@ -1362,10 +1362,10 @@ void SerialInputAddon::oled_draw_char(uint8_t x, uint8_t y, char c, uint8_t size
     } else if (c == ':') {
         char_index = 69;
     } else {
-        char_index = 0; // 공백
+        char_index = 0; // space
     }
     
-    // 문자 데이터 출력
+    // output glyph data
     uint8_t page = y / 8;
     oled_send_cmd(OLED_PAGE_ADDR);
     oled_send_cmd(page);
@@ -1383,7 +1383,7 @@ void SerialInputAddon::oled_draw_char(uint8_t x, uint8_t y, char c, uint8_t size
 }
 
 // ========================================
-// OLED 문자열 출력 (안전)
+// Draw OLED string (safe)
 // ========================================
 void SerialInputAddon::oled_draw_string(uint8_t x, uint8_t y, const char* str, uint8_t size) {
     if (!oled_available) return;
@@ -1391,12 +1391,12 @@ void SerialInputAddon::oled_draw_string(uint8_t x, uint8_t y, const char* str, u
     uint8_t cursor_x = x;
     while (*str) {
         oled_draw_char(cursor_x, y, *str++, size);
-        cursor_x += 6 * size; // 5 픽셀 + 1 픽셀 간격
+        cursor_x += 6 * size; // 5 px + 1 px gap
     }
 }
 
 // ========================================
-// 현재 모드를 문자열로 변환
+// Convert current mode to string
 // ========================================
 const char* SerialInputAddon::getModeString(uint8_t mode) {
     switch (mode) {
@@ -1424,7 +1424,7 @@ const char* SerialInputAddon::getModeString(uint8_t mode) {
 }
 
 // ========================================
-// 패드 모드를 문자열로 변환
+// Convert pad mode to string
 // ========================================
 const char* SerialInputAddon::getPadModeString(uint8_t modes, bool is_player1) {
     uint8_t check_flags = modes & 0x0F;
@@ -1447,17 +1447,17 @@ const char* SerialInputAddon::getPadModeString(uint8_t modes, bool is_player1) {
 }
 
 // ========================================
-// SWAP 상태 확인
+// check SWAP state
 // ========================================
 bool SerialInputAddon::isSwapped() {
     return (serial_state.channel_state & 0x01) != 0;
 }
 
 // ========================================
-// 스타일 1: 기본 디스플레이 (안전)
+// Style 1: default display (safe)
 // ========================================
 void SerialInputAddon::updateDisplay() {
-    if (!oled_available) return;  // OLED 없으면 즉시 리턴
+    if (!oled_available) return;  // return immediately if no OLED
     
     static uint8_t last_mode = 0xFF;
     static uint8_t last_modes = 0xFF;
@@ -1465,12 +1465,12 @@ void SerialInputAddon::updateDisplay() {
     static uint32_t last_update = 0;
     uint32_t now = time_us_32();
     
-    // 50ms마다 업데이트 체크
+    // check for update every 50ms
     if (now - last_update < 50000) {
         return;
     }
     
-    // 변경사항이 있을 때만 업데이트
+    // update only when something changed
     if (serial_state.input_mode == last_mode && 
         serial_state.modes == last_modes &&
         serial_state.channel == last_channel) {
@@ -1482,16 +1482,16 @@ void SerialInputAddon::updateDisplay() {
     last_channel = serial_state.channel;
     last_update = now;
     
-    // 화면 지우기
+    // clear screen
     oled_clear();
     
-    // ===== 첫 번째 줄: 현재 모드 (크게 표시) =====
+    // ===== line 1: current mode (large) =====
     const char* mode_str = getModeString(serial_state.input_mode);
     char mode_line[32];
     sprintf(mode_line, "MODE:%s", mode_str);
     oled_draw_string(5, 0, mode_line, 2);
     
-    // ===== 두 번째 줄: 패드 모드 상태 =====
+    // ===== line 2: pad-mode state =====
     const char* p1_pad = getPadModeString(serial_state.modes, true);
     const char* p2_pad = getPadModeString(serial_state.modes, false);
     
@@ -1499,14 +1499,14 @@ void SerialInputAddon::updateDisplay() {
     sprintf(pad_line, "1P:%s 2P:%s", p1_pad, p2_pad);
     oled_draw_string(5, 24, pad_line, 1);
     
-    // ===== 세 번째 줄: SWAP 상태 =====
+    // ===== line 3: SWAP state =====
     bool swapped = isSwapped();
     const char* swap_str = swapped ? "YES" : "NO";
     char swap_line[32];
     sprintf(swap_line, "SWAP:%s", swap_str);
     oled_draw_string(5, 40, swap_line, 1);
     
-    // ===== 네 번째 줄: 연결 상태 =====
+    // ===== line 4: connection state =====
     if (connection_timeout) {
         oled_draw_string(15, 56, "DISCONNECTED", 1);
     } else {
@@ -1520,7 +1520,7 @@ void SerialInputAddon::updateDisplay() {
 }
 
 // ========================================
-// 스타일 2: 컴팩트 디스플레이 (안전)
+// Style 2: compact display (safe)
 // ========================================
 void SerialInputAddon::updateDisplayCompact() {
     if (!oled_available) return;
@@ -1564,7 +1564,7 @@ void SerialInputAddon::updateDisplayCompact() {
 }
 
 // ========================================
-// 스타일 3: 플레이어 중심 디스플레이 (안전)
+// Style 3: player-centric display (safe)
 // ========================================
 void SerialInputAddon::updateDisplayPlayer() {
     if (!oled_available) return;
@@ -1612,7 +1612,7 @@ void SerialInputAddon::updateDisplayPlayer() {
 }
 
 // ========================================
-// 스타일 4: 아이콘 스타일 (안전)
+// Style 4: icon style (safe)
 // ========================================
 void SerialInputAddon::updateDisplayIcon() {
     if (!oled_available) return;

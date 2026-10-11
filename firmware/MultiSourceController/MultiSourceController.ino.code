@@ -1,0 +1,359 @@
+/*
+ * Multi Source to JAMMA Converter
+ * CXA2025AS + 74HC4052 + LM1881 Controller
+ *
+ * Arduino Pro Micro (5V, 16MHz)
+ * OLED 0.96" I2C (SSD1306, 128x64)
+ *
+ * Inputs: composite, S-Video, VGA 15kHz
+ * Output: JAMMA RGB
+ */
+#include <Wire.h>
+#include <EEPROM.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#define SCREEN_WIDTH    128
+#define SCREEN_HEIGHT   64
+#define OLED_RESET      -1
+#define OLED_ADDR       0x3C
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+#define EEPROM_MAGIC      0x00
+#define EEPROM_INPUT      0x01
+#define EEPROM_BRIGHTNESS 0x02
+#define EEPROM_CONTRAST   0x03
+#define EEPROM_SATURATION 0x04
+#define EEPROM_HUE        0x05
+#define EEPROM_MAGIC_VALUE 0xA5
+#define PIN_SDA       2
+#define PIN_SCL       3
+#define PIN_YS        4
+#define PIN_YUV_SW    5
+#define PIN_BTN_INPUT 6
+#define PIN_BTN_MODE  7
+#define PIN_BTN_PLUS  8
+#define PIN_BTN_MINUS 9
+#define PIN_MUX_A0    10
+#define PIN_MUX_A1    14
+#define CXA2025AS_ADDR  0x44
+#define REG_CONTRAST    0x00
+#define REG_HUE         0x01
+#define REG_SATURATION  0x02
+#define REG_BRIGHTNESS  0x03
+#define REG_CONTROL     0x0B
+enum InputMode {
+  INPUT_COMPOSITE = 0,
+  INPUT_SVIDEO    = 1,
+  INPUT_VGA       = 2,
+  INPUT_COUNT     = 3
+};
+const char* INPUT_NAMES[] = {
+  "COMPOSITE",
+  "S-VIDEO",
+  "VGA 15kHz"
+};
+const char INPUT_ICONS[] = {'C', 'S', 'V'};
+enum AdjustMode {
+  ADJ_BRIGHTNESS = 0,
+  ADJ_CONTRAST   = 1,
+  ADJ_SATURATION = 2,
+  ADJ_HUE        = 3,
+  ADJ_COUNT      = 4
+};
+const char* ADJUST_NAMES[] = {
+  "BRIGHTNESS",
+  "CONTRAST",
+  "SATURATION",
+  "HUE"
+};
+const char* ADJUST_SHORT[] = {
+  "BRT",
+  "CON",
+  "SAT",
+  "HUE"
+};
+InputMode currentInput = INPUT_COMPOSITE;
+AdjustMode currentAdjust = ADJ_BRIGHTNESS;
+uint8_t brightness = 32;
+uint8_t contrast   = 32;
+uint8_t saturation = 32;
+uint8_t hue        = 32;
+unsigned long lastButtonTime = 0;
+const unsigned long DEBOUNCE_DELAY = 150;
+bool needDisplayUpdate = true;
+bool ctrap_active = false;
+bool oled_ok = false;
+void setupPins();
+void setupI2C();
+void setupOLED();
+void setupCXA2025AS();
+void setInputMode(InputMode mode);
+void setMuxChannel(uint8_t channel);
+void setCXAMode(InputMode mode);
+void writeRegister(uint8_t reg, uint8_t value);
+void writeContrastReg();
+void updateAllRegisters();
+void handleButtons();
+void adjustValue(int8_t delta);
+uint8_t* getValuePtr(AdjustMode mode);
+void loadSettings();
+void saveSettings();
+void updateDisplay();
+void drawHeader();
+void drawInputSection();
+void drawAdjustSection();
+void drawProgressBar(int x, int y, int width, int height, int value, int maxValue);
+void setup() {
+  Serial.begin(9600);
+  setupPins();
+  setupI2C();
+  setupOLED();
+  if (oled_ok) {
+    display.clearDisplay();
+    display.setTextSize(2);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(10, 10);
+    display.println(F("MULTI"));
+    display.setCursor(10, 30);
+    display.println(F("SOURCE"));
+    display.setTextSize(1);
+    display.setCursor(10, 52);
+    display.println(F("to JAMMA v1.0"));
+    display.display();
+    delay(1500);
+  }
+  loadSettings();
+  setupCXA2025AS();
+  setInputMode(currentInput);
+  needDisplayUpdate = true;
+}
+void loop() {
+  handleButtons();
+  if (needDisplayUpdate) {
+    updateDisplay();
+    needDisplayUpdate = false;
+  }
+}
+void setupPins() {
+  pinMode(PIN_YS, OUTPUT);
+  pinMode(PIN_YUV_SW, OUTPUT);
+  pinMode(PIN_MUX_A0, OUTPUT);
+  pinMode(PIN_MUX_A1, OUTPUT);
+  pinMode(PIN_BTN_INPUT, INPUT_PULLUP);
+  pinMode(PIN_BTN_MODE, INPUT_PULLUP);
+  pinMode(PIN_BTN_PLUS, INPUT_PULLUP);
+  pinMode(PIN_BTN_MINUS, INPUT_PULLUP);
+  digitalWrite(PIN_YS, LOW);
+  digitalWrite(PIN_YUV_SW, LOW);
+  digitalWrite(PIN_MUX_A0, LOW);
+  digitalWrite(PIN_MUX_A1, LOW);
+}
+void setupI2C() {
+  Wire.begin();
+  Wire.setClock(400000);
+}
+void setupOLED() {
+  oled_ok = display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR);
+  if (!oled_ok) {
+    Serial.println(F("OLED failed - continuing without display"));
+    return;
+  }
+  display.clearDisplay();
+  display.display();
+}
+void setupCXA2025AS() {
+  delay(100);
+  updateAllRegisters();
+  uint8_t control = 0xF8;
+  writeRegister(REG_CONTROL, control);
+}
+void setInputMode(InputMode mode) {
+  currentInput = mode;
+  setMuxChannel((uint8_t)mode);
+  setCXAMode(mode);
+}
+void setMuxChannel(uint8_t channel) {
+  digitalWrite(PIN_MUX_A0, (channel & 0x01) ? HIGH : LOW);
+  digitalWrite(PIN_MUX_A1, (channel & 0x02) ? HIGH : LOW);
+}
+void setCXAMode(InputMode mode) {
+  switch (mode) {
+    case INPUT_COMPOSITE:
+      digitalWrite(PIN_YS, LOW);
+      digitalWrite(PIN_YUV_SW, LOW);
+      ctrap_active = true;
+      break;
+    case INPUT_SVIDEO:
+      digitalWrite(PIN_YS, LOW);
+      digitalWrite(PIN_YUV_SW, LOW);
+      ctrap_active = false;
+      break;
+    case INPUT_VGA:
+      digitalWrite(PIN_YS, HIGH);
+      digitalWrite(PIN_YUV_SW, LOW);
+      ctrap_active = false;
+      break;
+  }
+  writeContrastReg();
+}
+void writeContrastReg() {
+  uint8_t reg = (ctrap_active ? 0x40 : 0x00) | (contrast & 0x3F);
+  writeRegister(REG_CONTRAST, reg);
+}
+void writeRegister(uint8_t reg, uint8_t value) {
+  Wire.beginTransmission(CXA2025AS_ADDR);
+  Wire.write(reg);
+  Wire.write(value);
+  Wire.endTransmission();
+}
+void updateAllRegisters() {
+  writeRegister(REG_BRIGHTNESS, brightness);
+  writeContrastReg();
+  writeRegister(REG_SATURATION, saturation);
+  writeRegister(REG_HUE, hue);
+}
+void handleButtons() {
+  if (millis() - lastButtonTime < DEBOUNCE_DELAY) {
+    return;
+  }
+  if (digitalRead(PIN_BTN_INPUT) == LOW) {
+    lastButtonTime = millis();
+    currentInput = (InputMode)((currentInput + 1) % INPUT_COUNT);
+    setInputMode(currentInput);
+    saveSettings();
+    needDisplayUpdate = true;
+    while (digitalRead(PIN_BTN_INPUT) == LOW);
+  }
+  if (digitalRead(PIN_BTN_MODE) == LOW) {
+    lastButtonTime = millis();
+    currentAdjust = (AdjustMode)((currentAdjust + 1) % ADJ_COUNT);
+    needDisplayUpdate = true;
+    while (digitalRead(PIN_BTN_MODE) == LOW);
+  }
+  if (digitalRead(PIN_BTN_PLUS) == LOW) {
+    lastButtonTime = millis();
+    adjustValue(+2);
+    needDisplayUpdate = true;
+    while (digitalRead(PIN_BTN_PLUS) == LOW);
+  }
+  if (digitalRead(PIN_BTN_MINUS) == LOW) {
+    lastButtonTime = millis();
+    adjustValue(-2);
+    needDisplayUpdate = true;
+    while (digitalRead(PIN_BTN_MINUS) == LOW);
+  }
+}
+uint8_t* getValuePtr(AdjustMode mode) {
+  switch (mode) {
+    case ADJ_BRIGHTNESS: return &brightness;
+    case ADJ_CONTRAST:   return &contrast;
+    case ADJ_SATURATION: return &saturation;
+    case ADJ_HUE:        return &hue;
+    default:             return &brightness;
+  }
+}
+void adjustValue(int8_t delta) {
+  uint8_t* valuePtr = getValuePtr(currentAdjust);
+  int16_t newValue = (int16_t)*valuePtr + delta;
+  if (newValue < 0) newValue = 0;
+  if (newValue > 63) newValue = 63;
+  *valuePtr = (uint8_t)newValue;
+  switch (currentAdjust) {
+    case ADJ_BRIGHTNESS: writeRegister(REG_BRIGHTNESS, brightness); break;
+    case ADJ_CONTRAST:   writeContrastReg(); break;
+    case ADJ_SATURATION: writeRegister(REG_SATURATION, saturation); break;
+    case ADJ_HUE:        writeRegister(REG_HUE, hue); break;
+    default: return;
+  }
+  saveSettings();
+}
+void loadSettings() {
+  if (EEPROM.read(EEPROM_MAGIC) != EEPROM_MAGIC_VALUE) {
+    saveSettings();
+    return;
+  }
+  currentInput = (InputMode)EEPROM.read(EEPROM_INPUT);
+  brightness   = EEPROM.read(EEPROM_BRIGHTNESS);
+  contrast     = EEPROM.read(EEPROM_CONTRAST);
+  saturation   = EEPROM.read(EEPROM_SATURATION);
+  hue          = EEPROM.read(EEPROM_HUE);
+  if (currentInput >= INPUT_COUNT) currentInput = INPUT_COMPOSITE;
+  if (brightness > 63) brightness = 32;
+  if (contrast > 63) contrast = 32;
+  if (saturation > 63) saturation = 32;
+  if (hue > 63) hue = 32;
+}
+void saveSettings() {
+  EEPROM.update(EEPROM_MAGIC, EEPROM_MAGIC_VALUE);
+  EEPROM.update(EEPROM_INPUT, (uint8_t)currentInput);
+  EEPROM.update(EEPROM_BRIGHTNESS, brightness);
+  EEPROM.update(EEPROM_CONTRAST, contrast);
+  EEPROM.update(EEPROM_SATURATION, saturation);
+  EEPROM.update(EEPROM_HUE, hue);
+}
+void updateDisplay() {
+  if (!oled_ok) return;
+  display.clearDisplay();
+  drawHeader();
+  drawInputSection();
+  drawAdjustSection();
+  display.display();
+}
+void drawHeader() {
+  display.drawLine(0, 12, 127, 12, SSD1306_WHITE);
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 2);
+  display.print(F("MULTI-SRC"));
+  display.setCursor(90, 2);
+  display.print(F("["));
+  display.print(ADJUST_SHORT[currentAdjust]);
+  display.print(F("]"));
+}
+void drawInputSection() {
+  int y = 16;
+  for (int i = 0; i < INPUT_COUNT; i++) {
+    int x = i * 43;
+    int boxWidth = 40;
+    int boxHeight = 18;
+    if (i == currentInput) {
+      display.fillRoundRect(x, y, boxWidth, boxHeight, 3, SSD1306_WHITE);
+      display.setTextColor(SSD1306_BLACK);
+    } else {
+      display.drawRoundRect(x, y, boxWidth, boxHeight, 3, SSD1306_WHITE);
+      display.setTextColor(SSD1306_WHITE);
+    }
+    display.setTextSize(2);
+    display.setCursor(x + 14, y + 2);
+    display.print(INPUT_ICONS[i]);
+  }
+  display.setTextColor(SSD1306_WHITE);
+  display.setTextSize(1);
+  int nameLen = strlen(INPUT_NAMES[currentInput]);
+  int nameX = (128 - nameLen * 6) / 2;
+  display.setCursor(nameX, 36);
+  display.print(INPUT_NAMES[currentInput]);
+}
+void drawAdjustSection() {
+  int y = 46;
+  display.drawLine(0, y, 127, y, SSD1306_WHITE);
+  y += 2;
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, y);
+  display.print(ADJUST_NAMES[currentAdjust]);
+  uint8_t* valuePtr = getValuePtr(currentAdjust);
+  display.setCursor(100, y);
+  if (*valuePtr < 10) display.print(F(" "));
+  display.print(*valuePtr);
+  y += 9;
+  drawProgressBar(0, y, 128, 7, *valuePtr, 63);
+}
+void drawProgressBar(int x, int y, int width, int height, int value, int maxValue) {
+  display.drawRect(x, y, width, height, SSD1306_WHITE);
+  int fillWidth = map(value, 0, maxValue, 0, width - 4);
+  if (fillWidth > 0) {
+    display.fillRect(x + 2, y + 2, fillWidth, height - 4, SSD1306_WHITE);
+  }
+  int centerX = x + (width / 2);
+  display.drawLine(centerX, y, centerX, y + height - 1, SSD1306_WHITE);
+}

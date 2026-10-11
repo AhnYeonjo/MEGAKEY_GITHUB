@@ -1,24 +1,24 @@
 /*
- * Arduino IR Signal Analyzer - 완전 수정 버전
- * 첫 펄스 오버플로우 문제 해결
+ * Arduino IR Signal Analyzer - fully revised version
+ * fixes the first-pulse overflow problem
  */
 
 #define IR_PIN 2
 #define LED_PIN 13
 
-// 타이밍 설정
+// timing settings
 #define MAX_PULSES 100      
 #define MIN_GAP 10000       
 #define MAX_GAP 100000      
 #define SIGNAL_TIMEOUT 200  
 
-// 전역 변수
+// global variables
 unsigned int pulses[MAX_PULSES];
 byte pulseCount = 0;
 unsigned long startTime = 0;
 bool receiving = false;
 bool newData = false;
-int dataOffset = 0;  // 실제 데이터 시작 위치
+int dataOffset = 0;  // actual data start position
 
 void setup() {
   Serial.begin(9600);
@@ -32,7 +32,7 @@ void setup() {
 }
 
 void loop() {
-  // IR 신호 읽기
+  // read IR signal
   static int lastState = HIGH;
   static unsigned long lastTime = micros();
   
@@ -57,14 +57,14 @@ void loop() {
     lastState = currentState;
   }
   
-  // 타임아웃 체크
+  // timeout check
   if (receiving && (millis() - startTime > SIGNAL_TIMEOUT)) {
     receiving = false;
     newData = true;
     digitalWrite(LED_PIN, LOW);
   }
   
-  // 데이터 처리
+  // data processing
   if (newData) {
     analyzeSignal();
     newData = false;
@@ -72,7 +72,7 @@ void loop() {
   }
 }
 
-// 신호 분석
+// signal analysis
 void analyzeSignal() {
   Serial.println(F("======================"));
   Serial.print(F("Total Pulses: "));
@@ -83,14 +83,14 @@ void analyzeSignal() {
     return;
   }
   
-  // 첫 펄스가 오버플로우(65535)면 스킵
+  // skip if first pulse overflowed (65535)
   dataOffset = 0;
   if (pulses[0] > 60000) {
     dataOffset = 1;
     Serial.println(F("Note: First pulse overflow, skipping..."));
   }
   
-  // 프로토콜 확인 및 디코딩
+  // protocol detection and decoding
   if (checkNEC()) {
     decodeNEC();
   }
@@ -108,7 +108,7 @@ void analyzeSignal() {
   Serial.println();
 }
 
-// NEC 프로토콜 확인 (9ms mark, 4.5ms space)
+// NEC protocol detection (9ms mark, 4.5ms space)
 bool checkNEC() {
   int idx = dataOffset;
   
@@ -120,7 +120,7 @@ bool checkNEC() {
   return false;
 }
 
-// Samsung 프로토콜 확인
+// Samsung protocol detection
 bool checkSamsung() {
   int idx = dataOffset;
   
@@ -132,7 +132,7 @@ bool checkSamsung() {
   return false;
 }
 
-// Sony 프로토콜 확인
+// Sony protocol detection
 bool checkSony() {
   int idx = dataOffset;
   
@@ -143,13 +143,13 @@ bool checkSony() {
   return false;
 }
 
-// NEC 디코딩
+// NEC decoding
 void decodeNEC() {
   Serial.println(F("Protocol: NEC"));
   
   unsigned long data = 0;
   
-  // 헤더 다음부터 32비트 데이터
+  // 32-bit data following the header
   for (int i = 0; i < 32; i++) {
     int idx = dataOffset + 2 + (i * 2) + 1;
     if (idx < pulseCount) {
@@ -159,7 +159,7 @@ void decodeNEC() {
     }
   }
   
-  // NEC 형식 분석
+  // NEC format parsing
   byte address = data & 0xFF;
   byte addressInv = (data >> 8) & 0xFF;
   byte command = (data >> 16) & 0xFF;
@@ -168,7 +168,7 @@ void decodeNEC() {
   Serial.print(F("Address: 0x"));
   printHex(address);
   
-  // 주소 검증
+  // address validation
   if ((address ^ addressInv) == 0xFF) {
     Serial.print(F(" [Valid]"));
   } else {
@@ -181,7 +181,7 @@ void decodeNEC() {
   Serial.print(command);
   Serial.print(F(")"));
   
-  // 명령 검증
+  // command validation
   if ((command ^ commandInv) == 0xFF) {
     Serial.print(F(" [Valid]"));
   } else {
@@ -190,17 +190,17 @@ void decodeNEC() {
   
   Serial.println();
   
-  // 전체 32비트 코드
+  // full 32-bit code
   Serial.print(F("Full Code: 0x"));
   Serial.println(data, HEX);
   
-  // 리피트 신호 확인
+  // repeat signal detection
   if (pulseCount > 68) {
     Serial.println(F("Repeat signal detected"));
   }
 }
 
-// Samsung 디코딩
+// Samsung decoding
 void decodeSamsung() {
   Serial.println(F("Protocol: Samsung"));
   
@@ -217,7 +217,7 @@ void decodeSamsung() {
   Serial.println(code, HEX);
 }
 
-// Sony 디코딩
+// Sony decoding
 void decodeSony() {
   Serial.println(F("Protocol: Sony"));
   
@@ -240,23 +240,23 @@ void decodeSony() {
   Serial.println(command);
 }
 
-// RAW 데이터 표시
+// RAW data display
 void showRawData() {
-  // 타이밍 샘플
+  // timing samples
   Serial.print(F("Header: "));
   Serial.print(pulses[dataOffset]);
   Serial.print(F(","));
   Serial.print(pulses[dataOffset + 1]);
   Serial.println(F(" us"));
   
-  // 바이너리 패턴
+  // binary pattern
   Serial.print(F("Binary: "));
   for (int i = dataOffset + 3; i < pulseCount && i < dataOffset + 67; i += 2) {
     Serial.print(pulses[i] > 1000 ? '1' : '0');
   }
   Serial.println();
   
-  // 간단한 해시값 (버튼 구분용)
+  // simple hash (for button identification)
   unsigned long hash = 0;
   for (int i = dataOffset; i < pulseCount && i < dataOffset + 32; i++) {
     hash = hash * 31 + (pulses[i] / 100);
@@ -265,7 +265,7 @@ void showRawData() {
   Serial.println(hash, HEX);
 }
 
-// HEX 출력 헬퍼
+// HEX output helper
 void printHex(byte val) {
   if (val < 16) Serial.print('0');
   Serial.print(val, HEX);
