@@ -37,7 +37,7 @@ flowchart LR
         A2[GP2040-CE +<br/>SerialInput addon<br/>PLAYER_NUMBER=2]
     end
 
-    MUX[SN74CB3Q3253 x2<br/>USB 4-ch mux]
+    MUX[FSUSB42 x2<br/>USB 4-ch mux]
     HDMI[HDMI switch]
     HOST[PC1..PC4 / console / JAMMA]
 
@@ -97,7 +97,7 @@ Driven from the 74HC595 bits `MUX1_SEL/1_OE/2_SEL/2_OE`:
 The SEL/OE logic above matches `setKvmChannel()` in both `MegaKey_AVR128DB64` (74HC595
 bits) and `MegaKey_IO` (direct GPIO A10/A12/A14/A15). Circuit details:
 [`circuit-ir-usb-mux.md`](circuit-ir-usb-mux.md),
-[`sn74cb3q3253-mux.md`](sn74cb3q3253-mux.md).
+[`fsusb42-usb-mux.md`](fsusb42-usb-mux.md).
 
 ### Pad protocol modes (`selected_mode`)
 

@@ -17,3 +17,6 @@ build/
 
 # uf2 binaries (too large for git — publish as release assets)
 rp2040/firmware/*.uf2
+
+# VibeHarness working state (not project source)
+.vh-state/

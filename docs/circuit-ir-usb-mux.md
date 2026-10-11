@@ -33,8 +33,8 @@ Mount the LED aimed at the HDMI-switch receiver. Use
 
 ## 2. USB multiplexer (KVM channel select)
 
-Two **SN74CB3Q3253PW** dual 2:1 FET muxes switch the pair of GP2040-CE USB data
-lines to one of four hosts; see [`sn74cb3q3253-mux.md`](sn74cb3q3253-mux.md) for the
+Two **FSUSB42** USB 2.0 High-Speed switches route the pair of GP2040-CE USB data
+lines to one of four hosts; see [`fsusb42-usb-mux.md`](fsusb42-usb-mux.md) for the
 chip-level wiring.
 
 ### Control signals by board generation
@@ -72,7 +72,7 @@ Evidence: `#define MUX*_PIN` + `setKvmChannel()` in `firmware/MegaKey_IO/MegaKey
 - Resistor 1 kΩ × 1, 100 Ω × 1
 
 **USB multiplexer**
-- SN74CB3Q3253PW × 2
+- FSUSB42 × 2 (TI USB 2.0 HS DPDT switch; refdes U1/U2 `FSUSB42MUX` on the USBMUX board)
 - 0.1 µF ceramic decoupling capacitor × 2
 - USB Type-A ports × 4–5, USB Type-B (upstream) × 1–2
 
@@ -83,7 +83,7 @@ Evidence: `#define MUX*_PIN` + `setKvmChannel()` in `firmware/MegaKey_IO/MegaKey
 
 ## 4. Important notes
 
-- The SN74CB3Q3253PW runs on a **3.3 V supply**; its I/Os are 5 V tolerant.
+- The FSUSB42 runs on a **3.0–3.6 V supply** (USB signal levels; VDD ~3.3 V).
 - Maintain **90 Ω ±10%** USB differential impedance.
 - Keep the D+/D- length difference within **5 mm**.
 - Place 0.1 µF decoupling capacitors next to each MUX chip.

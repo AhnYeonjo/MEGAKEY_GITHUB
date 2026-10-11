@@ -34,7 +34,7 @@ flowchart LR
         A2[GP2040-CE +<br/>SerialInput addon<br/>PLAYER_NUMBER=2]
     end
 
-    MUX[SN74CB3Q3253 x2<br/>USB 4-channel mux]
+    MUX[FSUSB42 x2<br/>USB 4-channel mux]
     HDMI[HDMI switch]
     HOST[PC1 · PC2 · PC3 · PC4]
     CRT[CRT / monitor]
@@ -136,7 +136,7 @@ exclusivity). Docs: [`rp2040-gp2040-addon.md`](docs/rp2040-gp2040-addon.md)
 | CH5 (JAMMA) | X | 1 (OFF) | X | 1 (OFF) | USB blocked — JVS + HDMI only |
 
 (OE active low. Details: [`docs/circuit-ir-usb-mux.md`](docs/circuit-ir-usb-mux.md),
-[`docs/sn74cb3q3253-mux.md`](docs/sn74cb3q3253-mux.md).)
+[`docs/fsusb42-usb-mux.md`](docs/fsusb42-usb-mux.md).)
 
 ## Documentation
 
@@ -145,7 +145,7 @@ exclusivity). Docs: [`rp2040-gp2040-addon.md`](docs/rp2040-gp2040-addon.md)
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Whole-system composition, module map, wiring index |
 | [`docs/rp2040-gp2040-addon.md`](docs/rp2040-gp2040-addon.md) | Wire format, 2-player integration, GP2040-CE build guide |
 | [`docs/circuit-ir-usb-mux.md`](docs/circuit-ir-usb-mux.md) | IR driver circuit, mux control, BOM, PCB layout rules |
-| [`docs/sn74cb3q3253-mux.md`](docs/sn74cb3q3253-mux.md) | USB mux chip control semantics |
+| [`docs/fsusb42-usb-mux.md`](docs/fsusb42-usb-mux.md) | USB mux (FSUSB42) chip control semantics |
 | [`docs/firmware-*.md`](docs/) | Per-module documentation |
 
 ## Hardware (EasyEDA)
