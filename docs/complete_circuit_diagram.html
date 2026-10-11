@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MegaKey IR & USB Multiplexer Circuit</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #1e3c72;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .circuit-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+        }
+        .section-title {
+            color: #2a5298;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        svg {
+            width: 100%;
+            height: auto;
+            background: white;
+            border-radius: 10px;
+        }
+        .component-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .component-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .pin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        .pin-table th, .pin-table td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        .pin-table th {
+            background: #2a5298;
+            color: white;
+        }
+        .pin-table tr:nth-child(even) {
+            background: #f2f2f2;
+        }
+        code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        .note {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 10px 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔌 MegaKey IR LED & USB 멀티플렉서 완전 회로도</h1>
+        
+        <!-- IR LED 회로 섹션 -->
+        <div class="circuit-section">
+            <div class="section-title">📡 IR LED 송신 회로</div>
+            <svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
+                <!-- Arduino Mega -->
+                <rect x="50" y="100" width="120" height="80" fill="#2196F3" stroke="#000" stroke-width="2" rx="5"/>
+                <text x="110" y="130" text-anchor="middle" fill="white" font-weight="bold">Arduino</text>
+                <text x="110" y="150" text-anchor="middle" fill="white">MEGA</text>
+                <text x="110" y="170" text-anchor="middle" fill="white" font-size="12">Pin D46</text>
+                
+                <!-- Transistor Driver Circuit -->
+                <rect x="300" y="80" width="150" height="120" fill="#f8f9fa" stroke="#333" stroke-width="2" rx="5"/>
+                <text x="375" y="100" text-anchor="middle" font-weight="bold">Driver Circuit</text>
+                
+                <!-- 2N2222 Transistor -->
+                <circle cx="375" cy="140" r="20" fill="none" stroke="#000" stroke-width="2"/>
+                <line x1="355" y1="140" x2="395" y2="140" stroke="#000" stroke-width="2"/>
+                <line x1="375" y1="120" x2="375" y2="160" stroke="#000" stroke-width="2"/>
+                <text x="375" y="185" text-anchor="middle" font-size="11">2N2222</text>
+                
+                <!-- Resistors -->
+                <rect x="230" y="135" width="40" height="10" fill="#8B4513" stroke="#000"/>
+                <text x="250" y="130" text-anchor="middle" font-size="10">1kΩ</text>
+                
+                <rect x="375" y="50" width="10" height="40" fill="#8B4513" stroke="#000"/>
+                <text x="400" y="70" font-size="10">100Ω</text>
+                
+                <!-- IR LED -->
+                <circle cx="550" cy="140" r="25" fill="#FF00FF" stroke="#000" stroke-width="2"/>
+                <text x="550" y="145" text-anchor="middle" fill="white" font-weight="bold">IR</text>
+                <text x="550" y="180" text-anchor="middle" font-size="11">940nm</text>
+                
+                <!-- Connections -->
+                <line x1="170" y1="140" x2="230" y2="140" stroke="#FF5722" stroke-width="2"/>
+                <line x1="270" y1="140" x2="355" y2="140" stroke="#FF5722" stroke-width="2"/>
+                <line x1="395" y1="140" x2="525" y2="140" stroke="#000" stroke-width="2"/>
+                
+                <!-- Power -->
+                <line x1="380" y1="90" x2="380" y2="30" stroke="red" stroke-width="2"/>
+                <text x="380" y="20" text-anchor="middle" fill="red" font-weight="bold">+5V</text>
+                
+                <!-- Ground -->
+                <line x1="375" y1="160" x2="375" y2="200" stroke="black" stroke-width="2"/>
+                <line x1="365" y1="200" x2="385" y2="200" stroke="black" stroke-width="2"/>
+                <line x1="368" y1="203" x2="382" y2="203" stroke="black" stroke-width="2"/>
+                <line x1="371" y1="206" x2="379" y2="206" stroke="black" stroke-width="2"/>
+                
+                <!-- Labels -->
+                <text x="200" y="130" font-size="11">D46</text>
+                <text x="310" y="160" font-size="10">Base</text>
+                <text x="420" y="130" font-size="10">Collector</text>
+                <text x="375" y="220" text-anchor="middle" font-size="10">Emitter (GND)</text>
+                
+                <!-- Signal wave -->
+                <path d="M 600 130 L 610 130 L 610 120 L 620 120 L 620 130 L 630 130 L 630 120 L 640 120 L 640 130 L 650 130" 
+                      stroke="#FF00FF" stroke-width="2" fill="none"/>
+                <text x="625" y="110" text-anchor="middle" font-size="10">38kHz</text>
+            </svg>
+        </div>
+        
+        <!-- USB 멀티플렉서 회로 섹션 -->
+        <div class="circuit-section">
+            <div class="section-title">🔄 USB 멀티플렉서 회로 (SN74CB3Q3253PW)</div>
+            <svg viewBox="0 0 900 500" xmlns="http://www.w3.org/2000/svg">
+                <!-- Arduino Mega Control Pins -->
+                <rect x="50" y="200" width="100" height="150" fill="#2196F3" stroke="#000" stroke-width="2" rx="5"/>
+                <text x="100" y="225" text-anchor="middle" fill="white" font-weight="bold">Arduino</text>
+                <text x="100" y="245" text-anchor="middle" fill="white" font-size="11">Control</text>
+                <text x="100" y="265" text-anchor="middle" fill="white" font-size="10">A7 (61)</text>
+                <text x="100" y="280" text-anchor="middle" fill="white" font-size="10">A6 (60)</text>
+                <text x="100" y="295" text-anchor="middle" fill="white" font-size="10">A9 (63)</text>
+                <text x="100" y="310" text-anchor="middle" fill="white" font-size="10">A8 (62)</text>
+                
+                <!-- USB Hub -->
+                <rect x="200" y="230" width="80" height="80" fill="#4CAF50" stroke="#000" stroke-width="2" rx="5"/>
+                <text x="240" y="255" text-anchor="middle" fill="white" font-weight="bold">USB</text>
+                <text x="240" y="275" text-anchor="middle" fill="white">HUB</text>
+                <text x="240" y="295" text-anchor="middle" fill="white" font-size="10">Host</text>
+                
+                <!-- MUX Chip 1 -->
+                <rect x="380" y="120" width="140" height="120" fill="#9C27B0" stroke="#000" stroke-width="2" rx="5"/>
+                <text x="450" y="140" text-anchor="middle" fill="white" font-weight="bold">MUX #1</text>
+                <text x="450" y="155" text-anchor="middle" fill="white" font-size="10">SN74CB3Q3253</text>
+                
+                <!-- MUX1 Pins -->
+                <rect x="360" y="160" width="20" height="15" fill="#FFD700"/>
+                <text x="355" y="170" text-anchor="end" font-size="9">SEL</text>
+                <rect x="360" y="180" width="20" height="15" fill="#FFD700"/>
+                <text x="355" y="190" text-anchor="end" font-size="9">OE</text>
+                <rect x="360" y="200" width="20" height="15" fill="#90EE90"/>
+                <text x="355" y="210" text-anchor="end" font-size="9">D+</text>
+                <rect x="360" y="215" width="20" height="15" fill="#90EE90"/>
+                <text x="355" y="225" text-anchor="end" font-size="9">D-</text>
+                
+                <rect x="520" y="160" width="20" height="15" fill="#87CEEB"/>
+                <text x="545" y="170" font-size="9">Y0+</text>
+                <rect x="520" y="175" width="20" height="15" fill="#87CEEB"/>
+                <text x="545" y="185" font-size="9">Y0-</text>
+                <rect x="520" y="195" width="20" height="15" fill="#87CEEB"/>
+                <text x="545" y="205" font-size="9">Y1+</text>
+                <rect x="520" y="210" width="20" height="15" fill="#87CEEB"/>
+                <text x="545" y="220" font-size="9">Y1-</text>
+                
+                <!-- MUX Chip 2 -->
+                <rect x="380" y="280" width="140" height="120" fill="#9C27B0" stroke="#000" stroke-width="2" rx="5"/>
+                <text x="450" y="300" text-anchor="middle" fill="white" font-weight="bold">MUX #2</text>
+                <text x="450" y="315" text-anchor="middle" fill="white" font-size="10">SN74CB3Q3253</text>
+                
+                <!-- MUX2 Pins -->
+                <rect x="360" y="320" width="20" height="15" fill="#FFD700"/>
+                <text x="355" y="330" text-anchor="end" font-size="9">SEL</text>
+                <rect x="360" y="340" width="20" height="15" fill="#FFD700"/>
+                <text x="355" y="350" text-anchor="end" font-size="9">OE</text>
+                <rect x="360" y="360" width="20" height="15" fill="#90EE90"/>
+                <text x="355" y="370" text-anchor="end" font-size="9">D+</text>
+                <rect x="360" y="375" width="20" height="15" fill="#90EE90"/>
+                <text x="355" y="385" text-anchor="end" font-size="9">D-</text>
+                
+                <rect x="520" y="320" width="20" height="15" fill="#87CEEB"/>
+                <text x="545" y="330" font-size="9">Y0+</text>
+                <rect x="520" y="335" width="20" height="15" fill="#87CEEB"/>
+                <text x="545" y="345" font-size="9">Y0-</text>
+                <rect x="520" y="355" width="20" height="15" fill="#87CEEB"/>
+                <text x="545" y="365" font-size="9">Y1+</text>
+                <rect x="520" y="370" width="20" height="15" fill="#87CEEB"/>
+                <text x="545" y="380" font-size="9">Y1-</text>
+                
+                <!-- PC Connections -->
+                <rect x="650" y="100" width="60" height="40" fill="#FF9800" stroke="#000" stroke-width="2" rx="5"/>
+                <text x="680" y="125" text-anchor="middle" fill="white" font-weight="bold">PC1</text>
+                
+                <rect x="650" y="160" width="60" height="40" fill="#FF9800" stroke="#000" stroke-width="2" rx="5"/>
+                <text x="680" y="185" text-anchor="middle" fill="white" font-weight="bold">PC2</text>
+                
+                <rect x="650" y="280" width="60" height="40" fill="#FF9800" stroke="#000" stroke-width="2" rx="5"/>
+                <text x="680" y="305" text-anchor="middle" fill="white" font-weight="bold">PC3</text>
+                
+                <rect x="650" y="340" width="60" height="40" fill="#FF9800" stroke="#000" stroke-width="2" rx="5"/>
+                <text x="680" y="365" text-anchor="middle" fill="white" font-weight="bold">PC4</text>
+                
+                <!-- Control Lines -->
+                <line x1="150" y1="265" x2="360" y2="167" stroke="#FFD700" stroke-width="2" stroke-dasharray="5,3"/>
+                <text x="250" y="210" font-size="9" fill="#FFD700">A7→SEL1</text>
+                
+                <line x1="150" y1="280" x2="360" y2="187" stroke="#FFD700" stroke-width="2" stroke-dasharray="5,3"/>
+                <text x="250" y="225" font-size="9" fill="#FFD700">A6→OE1</text>
+                
+                <line x1="150" y1="295" x2="360" y2="327" stroke="#FFD700" stroke-width="2" stroke-dasharray="5,3"/>
+                <text x="250" y="310" font-size="9" fill="#FFD700">A9→SEL2</text>
+                
+                <line x1="150" y1="310" x2="360" y2="347" stroke="#FFD700" stroke-width="2" stroke-dasharray="5,3"/>
+                <text x="250" y="360" font-size="9" fill="#FFD700">A8→OE2</text>
+                
+                <!-- USB Data Lines -->
+                <line x1="280" y1="260" x2="360" y2="207" stroke="#4CAF50" stroke-width="3"/>
+                <line x1="280" y1="280" x2="360" y2="367" stroke="#4CAF50" stroke-width="3"/>
+                <text x="310" y="250" font-size="9" fill="#4CAF50">D+/D-</text>
+                <text x="310" y="350" font-size="9" fill="#4CAF50">D+/D-</text>
+                
+                <!-- Output connections -->
+                <line x1="540" y1="167" x2="650" y2="120" stroke="#FF5722" stroke-width="2"/>
+                <line x1="540" y1="202" x2="650" y2="180" stroke="#FF5722" stroke-width="2"/>
+                <line x1="540" y1="327" x2="650" y2="300" stroke="#FF5722" stroke-width="2"/>
+                <line x1="540" y1="362" x2="650" y2="360" stroke="#FF5722" stroke-width="2"/>
+                
+                <!-- Power and Ground -->
+                <text x="450" y="110" text-anchor="middle" font-size="10" fill="red">VDD: 3.3V</text>
+                <text x="450" y="420" text-anchor="middle" font-size="10">GND</text>
+                
+                <!-- Decoupling Capacitors -->
+                <rect x="430" y="85" width="40" height="15" fill="#808080" stroke="#000"/>
+                <text x="450" y="80" text-anchor="middle" font-size="9">0.1µF</text>
+                <rect x="430" y="425" width="40" height="15" fill="#808080" stroke="#000"/>
+                <text x="450" y="455" text-anchor="middle" font-size="9">0.1µF</text>
+            </svg>
+        </div>
+        
+        <!-- 부품 목록 -->
+        <div class="circuit-section">
+            <div class="section-title">📦 필요 부품 목록</div>
+            <div class="component-list">
+                <div class="component-card">
+                    <h4>IR LED 회로</h4>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>IR LED (940nm) × 1</li>
+                        <li>2N2222 NPN 트랜지스터 × 1</li>
+                        <li>저항 1kΩ × 1</li>
+                        <li>저항 100Ω × 1</li>
+                    </ul>
+                </div>
+                <div class="component-card">
+                    <h4>USB 멀티플렉서</h4>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>SN74CB3Q3253PW × 2</li>
+                        <li>0.1µF 세라믹 캐패시터 × 2</li>
+                        <li>USB Type-A 포트 × 5</li>
+                        <li>USB Type-B 포트 × 1</li>
+                    </ul>
+                </div>
+                <div class="component-card">
+                    <h4>선택 사항</h4>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>TVS 다이오드 (ESD 보호)</li>
+                        <li>페라이트 비드 (노이즈 필터)</li>
+                        <li>LED 표시등 (상태 표시)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 핀 연결 테이블 -->
+        <div class="circuit-section">
+            <div class="section-title">🔗 핀 연결 요약</div>
+            <table class="pin-table">
+                <thead>
+                    <tr>
+                        <th>Arduino 핀</th>
+                        <th>연결 대상</th>
+                        <th>기능</th>
+                        <th>비고</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>D46</code></td>
+                        <td>IR LED (via 2N2222)</td>
+                        <td>HDMI 스위처 제어</td>
+                        <td>NEC 프로토콜 38kHz</td>
+                    </tr>
+                    <tr>
+                        <td><code>A7 (61)</code></td>
+                        <td>MUX1 SEL</td>
+                        <td>CH1/CH2 선택</td>
+                        <td>0=CH1, 1=CH2</td>
+                    </tr>
+                    <tr>
+                        <td><code>A6 (60)</code></td>
+                        <td>MUX1 OE</td>
+                        <td>칩1 활성화</td>
+                        <td>Active LOW</td>
+                    </tr>
+                    <tr>
+                        <td><code>A9 (63)</code></td>
+                        <td>MUX2 SEL</td>
+                        <td>CH3/CH4 선택</td>
+                        <td>0=CH3, 1=CH4</td>
+                    </tr>
+                    <tr>
+                        <td><code>A8 (62)</code></td>
+                        <td>MUX2 OE</td>
+                        <td>칩2 활성화</td>
+                        <td>Active LOW</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 채널 선택 로직 -->
+        <div class="circuit-section">
+            <div class="section-title">⚙️ 채널 선택 진리표</div>
+            <table class="pin-table">
+                <thead>
+                    <tr>
+                        <th>채널</th>
+                        <th>MUX1_SEL (A7)</th>
+                        <th>MUX1_OE (A6)</th>
+                        <th>MUX2_SEL (A9)</th>
+                        <th>MUX2_OE (A8)</th>
+                        <th>활성 경로</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>CH1</td>
+                        <td>0</td>
+                        <td>0 (ON)</td>
+                        <td>X</td>
+                        <td>1 (OFF)</td>
+                        <td>MUX1 Y0 → PC1</td>
+                    </tr>
+                    <tr>
+                        <td>CH2</td>
+                        <td>1</td>
+                        <td>0 (ON)</td>
+                        <td>X</td>
+                        <td>1 (OFF)</td>
+                        <td>MUX1 Y1 → PC2</td>
+                    </tr>
+                    <tr>
+                        <td>CH3</td>
+                        <td>X</td>
+                        <td>1 (OFF)</td>
+                        <td>0</td>
+                        <td>0 (ON)</td>
+                        <td>MUX2 Y0 → PC3</td>
+                    </tr>
+                    <tr>
+                        <td>CH4</td>
+                        <td>X</td>
+                        <td>1 (OFF)</td>
+                        <td>1</td>
+                        <td>0 (ON)</td>
+                        <td>MUX2 Y1 → PC4</td>
+                    </tr>
+                    <tr style="background: #ffe4e1;">
+                        <td>CH5 (JAMMA)</td>
+                        <td>X</td>
+                        <td>1 (OFF)</td>
+                        <td>X</td>
+                        <td>1 (OFF)</td>
+                        <td>USB 차단 (HDMI만)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 중요 사항 -->
+        <div class="note">
+            <strong>⚠️ 중요 사항:</strong>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>SN74CB3Q3253PW는 3.3V 전원 사용 (5V 허용 I/O)</li>
+                <li>USB 차동 임피던스 90Ω ±10% 유지 필수</li>
+                <li>D+/D- 트레이스 길이 차이 5mm 이내</li>
+                <li>각 MUX 칩 근처에 0.1µF 디커플링 캐패시터 배치</li>
+                <li>IR LED는 수신기 방향으로 정확히 향하도록 설치</li>
+                <li>CH5 선택 시 모든 USB 연결 차단 (JAMMA는 HDMI만 사용)</li>
+            </ul>
+        </div>
+        
+        <!-- PCB 레이아웃 가이드 -->
+        <div class="circuit-section">
+            <div class="section-title">🎯 PCB 레이아웃 권장사항</div>
+            <ul style="margin: 15px 0; padding-left: 25px;">
+                <li><strong>레이어 구성:</strong> 최소 2층 (신호/GND), 권장 4층 (신호/GND/전원/신호)</li>
+                <li><strong>트레이스 폭:</strong> USB 데이터: 0.2mm, 전원: 0.5mm 이상</li>
+                <li><strong>비아:</strong> 고속 신호 경로에 최소화 (채널당 2개 이하)</li>
+                <li><strong>그라운드:</strong> 연속적인 그라운드 플레인 필수</li>
+                <li><strong>컴포넌트 배치:</strong> MUX 칩을 USB 커넥터 가까이 배치</li>
+                <li><strong>ESD 보호:</strong> USB 포트마다 TVS 다이오드 추가 권장</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

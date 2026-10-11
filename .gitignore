@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# Arduino build artifacts
+build/
+*.o
+*.elf
+*.hex
+*.map
+
+# Backup files
+*.bak
+
+# IDE
+.vscode/
+*.code-workspace
+
+# uf2 binaries (too large for git — release assets 권장)
+rp2040/firmware/*.uf2
