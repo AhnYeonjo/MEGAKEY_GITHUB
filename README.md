@@ -73,8 +73,17 @@ Custom GP2040-CE board pinmap.
 
 ## Documentation
 
-- `docs/complete_circuit_diagram.html` — IR LED driver & USB multiplexer circuit, BOM, pin map, channel truth table, PCB layout guidelines.
-- `docs/sn74cb3q3253_pinmap.html` — SN74CB3Q3253PW detailed pinmap and wiring for the two MUX chips.
+| Document | Contents |
+|---|---|
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | **Start here** — whole-system composition, module map, wiring index, KVM truth table, mode table |
+| [`docs/rp2040-gp2040-addon.md`](docs/rp2040-gp2040-addon.md) | GP2040-CE Serial Input Addon: CompactMessage wire format, 2-player integration with the Arduino, build/flash guide |
+| [`docs/firmware-MegaKey_AVR128DB64.md`](docs/firmware-MegaKey_AVR128DB64.md) | Main board v4.0 module doc |
+| [`docs/firmware-MegaKey_IO.md`](docs/firmware-MegaKey_IO.md) | Previous-gen Mega board (v3.4) |
+| [`docs/firmware-MultiSourceController.md`](docs/firmware-MultiSourceController.md) | Video converter (CXA2025AS) |
+| [`docs/firmware-PowerController.md`](docs/firmware-PowerController.md) | Power sequencer & lighting |
+| [`docs/firmware-IR_SignalAnalyzer.md`](docs/firmware-IR_SignalAnalyzer.md) | IR capture debug utility |
+| [`docs/complete_circuit_diagram.html`](docs/complete_circuit_diagram.html) | IR LED driver & USB multiplexer circuit, BOM, pin map, channel truth table, PCB layout guidelines |
+| [`docs/sn74cb3q3253_pinmap.html`](docs/sn74cb3q3253_pinmap.html) | SN74CB3Q3253PW detailed pinmap and wiring for the two MUX chips |
 
 ---
 
