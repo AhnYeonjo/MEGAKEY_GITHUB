@@ -148,11 +148,21 @@ exclusivity). Docs: [`rp2040-gp2040-addon.md`](docs/rp2040-gp2040-addon.md)
 | [`docs/fsusb42-usb-mux.md`](docs/fsusb42-usb-mux.md) | USB mux (FSUSB42) chip control semantics |
 | [`docs/firmware-*.md`](docs/) | Per-module documentation |
 
-## Hardware (EasyEDA)
+## Hardware (PCB fabrication)
 
-The matching PCB/schematic designs are archived under
-[`hardware/`](hardware/) — one folder per board, mapped to the firmware modules
-(the online source project requires the designer's EasyEDA login).
+JLCPCB/EasyEDA fabrication packages are committed at the repository root as three
+`*.zip` archives (Gerber drill + copper + pick-and-place + 3-D renders). Each has been
+verified against the firmware net names / silkscreen:
+
+| Archive | Board | Verified against firmware |
+|---|---|---|
+| [`MegaPCB.zip`](MegaPCB.zip) | Main IO board — `MEGA2560PRO-EMBED`, `RP2040_ZERO_1P/2P`, `JAMMA1/2`, `JVSIO`, `DREAMCAST_1P/2P`, MUX control | [`firmware/MegaKey_IO`](firmware/MegaKey_IO) (v3.4) |
+| [`POWERPCB.zip`](POWERPCB.zip) | Power sequencer — `K1..K7` relays, `IRLZ44N` LED MOSFET, `12V_PWN`, `JAMMA_PB30` | [`firmware/PowerController`](firmware/PowerController) |
+| [`USBMUX.zip`](USBMUX.zip) | USB KVM switch — `U1/U2 = FSUSB42MUX`, `USB_HUB`, `AMS1117-3.3`, `PC1..PC4` | `setKvmChannel()` in MegaKey_IO + AVR128DB64 |
+
+> **Note:** the v4.0 **AVR128DB64** board (the current main controller) has **no
+> fabrication zip in this set** — its netlist/schematic source lives only in the
+> original EasyEDA project (login required). Add its JLCPCB export when available.
 
 ## License
 
