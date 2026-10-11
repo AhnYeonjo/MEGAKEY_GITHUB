@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" font-family="Arial, sans-serif">
+  <style>
+    .wire { stroke:#000; stroke-width:1.5; fill:none; }
+    .wire-pwr { stroke:#c00; stroke-width:2; fill:none; }
+    .wire-gnd { stroke:#000; stroke-width:2; fill:none; }
+    .wire-cascade { stroke:#f60; stroke-width:2; fill:none; stroke-dasharray:5,2; }
+    .ic-body { fill:#e6f3ff; stroke:#0066cc; stroke-width:2; }
+    .pin-label { font-size:11px; fill:#000; }
+    .pin-num { font-size:10px; fill:#666; }
+    .net-label { font-size:11px; fill:#0066cc; font-weight:bold; }
+    .component-name { font-size:13px; fill:#000; font-weight:bold; }
+    .component-value { font-size:11px; fill:#444; }
+    .title-text { font-size:18px; font-weight:bold; fill:#000; }
+    .small-note { font-size:9px; fill:#666; font-style:italic; }
+    .dot { fill:#000; }
+    .led-arrow { stroke:#f60; stroke-width:1.5; fill:#f60; }
+  </style>
+
+  <!-- Title -->
+  <rect x="10" y="10" width="1380" height="40" fill="#e8e8e8" stroke="#000"/>
+  <text x="700" y="35" text-anchor="middle" class="title-text">Sheet 2: 74HC595 × 2 Cascade (KVM LED + STATUS + MUX 제어)</text>
+  
+  <!-- ==================== Input signals from MCU ==================== -->
+  <g id="mcu-signals">
+    <rect x="40" y="100" width="180" height="200" fill="#fff" stroke="#0066cc" stroke-width="2" rx="4"/>
+    <text x="130" y="125" text-anchor="middle" class="component-name">From AVR128DB64</text>
+    <text x="130" y="142" text-anchor="middle" class="component-value">(Sheet 1 참조)</text>
+    
+    <line x1="220" y1="170" x2="290" y2="170" class="wire"/>
+    <text x="225" y="165" class="pin-label">PF4</text>
+    <text x="295" y="165" class="net-label">SR_DATA</text>
+    
+    <line x1="220" y1="210" x2="290" y2="210" class="wire"/>
+    <text x="225" y="205" class="pin-label">PF5</text>
+    <text x="295" y="205" class="net-label">SR_CLOCK</text>
+    
+    <line x1="220" y1="250" x2="290" y2="250" class="wire"/>
+    <text x="225" y="245" class="pin-label">PF6</text>
+    <text x="295" y="245" class="net-label">SR_LATCH</text>
+    <text x="225" y="270" class="small-note">⚠ RESET fuse disabled</text>
+  </g>
+  
+  <!-- ==================== U2: First 74HC595 ==================== -->
+  <g id="U2">
+    <rect x="450" y="120" width="280" height="320" class="ic-body"/>
+    <text x="590" y="145" text-anchor="middle" class="component-name">U2: 74HC595D</text>
+    <text x="590" y="160" text-anchor="middle" class="component-value">SOIC-16 / LCSC: C5947</text>
+    
+    <!-- Left pins -->
+    <!-- Q1 (pin 1) -->
+    <line x1="430" y1="180" x2="450" y2="180" class="wire"/>
+    <text x="455" y="184" class="pin-label">Q1</text>
+    <text x="425" y="184" text-anchor="end" class="pin-num">1</text>
+    <line x1="430" y1="180" x2="350" y2="180" class="wire"/>
+    <text x="345" y="183" text-anchor="end" class="net-label">KVM2_LED</text>
+    
+    <!-- Q2 (pin 2) -->
+    <line x1="430" y1="200" x2="450" y2="200" class="wire"/>
+    <text x="455" y="204" class="pin-label">Q2</text>
+    <text x="425" y="204" text-anchor="end" class="pin-num">2</text>
+    <line x1="430" y1="200" x2="350" y2="200" class="wire"/>
+    <text x="345" y="203" text-anchor="end" class="net-label">KVM3_LED</text>
+    
+    <!-- Q3 (pin 3) -->
+    <line x1="430" y1="220" x2="450" y2="220" class="wire"/>
+    <text x="455" y="224" class="pin-label">Q3</text>
+    <text x="425" y="224" text-anchor="end" class="pin-num">3</text>
+    <line x1="430" y1="220" x2="350" y2="220" class="wire"/>
+    <text x="345" y="223" text-anchor="end" class="net-label">KVM4_LED</text>
+    
+    <!-- Q4 (pin 4) -->
+    <line x1="430" y1="240" x2="450" y2="240" class="wire"/>
+    <text x="455" y="244" class="pin-label">Q4</text>
+    <text x="425" y="244" text-anchor="end" class="pin-num">4</text>
+    <line x1="430" y1="240" x2="350" y2="240" class="wire"/>
+    <text x="345" y="243" text-anchor="end" class="net-label">KVM5_LED</text>
+    
+    <!-- Q5 (pin 5) -->
+    <line x1="430" y1="260" x2="450" y2="260" class="wire"/>
+    <text x="455" y="264" class="pin-label">Q5</text>
+    <text x="425" y="264" text-anchor="end" class="pin-num">5</text>
+    <line x1="430" y1="260" x2="350" y2="260" class="wire"/>
+    <text x="345" y="263" text-anchor="end" class="net-label">STATUS_LED</text>
+    
+    <!-- Q6 (pin 6) -->
+    <line x1="430" y1="280" x2="450" y2="280" class="wire"/>
+    <text x="455" y="284" class="pin-label">Q6</text>
+    <text x="425" y="284" text-anchor="end" class="pin-num">6</text>
+    <line x1="430" y1="280" x2="350" y2="280" class="wire"/>
+    <text x="345" y="283" text-anchor="end" class="net-label">MUX1_SEL</text>
+    
+    <!-- Q7 (pin 7) -->
+    <line x1="430" y1="300" x2="450" y2="300" class="wire"/>
+    <text x="455" y="304" class="pin-label">Q7</text>
+    <text x="425" y="304" text-anchor="end" class="pin-num">7</text>
+    <line x1="430" y1="300" x2="350" y2="300" class="wire"/>
+    <text x="345" y="303" text-anchor="end" class="net-label">MUX1_OE</text>
+    
+    <!-- GND (pin 8) -->
+    <line x1="430" y1="320" x2="450" y2="320" class="wire-gnd"/>
+    <text x="455" y="324" class="pin-label">GND</text>
+    <text x="425" y="324" text-anchor="end" class="pin-num">8</text>
+    <line x1="430" y1="320" x2="350" y2="320" class="wire-gnd"/>
+    <text x="345" y="323" text-anchor="end" class="net-label">GND</text>
+    
+    <!-- Right pins -->
+    <!-- VCC (pin 16) -->
+    <line x1="730" y1="180" x2="750" y2="180" class="wire-pwr"/>
+    <text x="725" y="184" text-anchor="end" class="pin-label">VCC</text>
+    <text x="735" y="184" class="pin-num">16</text>
+    <line x1="750" y1="180" x2="830" y2="180" class="wire-pwr"/>
+    <text x="835" y="183" class="net-label" fill="#c00">VCC</text>
+    
+    <!-- SRCLR (pin 10) - tie to VCC -->
+    <line x1="730" y1="200" x2="750" y2="200" class="wire"/>
+    <text x="725" y="204" text-anchor="end" class="pin-label">/SRCLR</text>
+    <text x="735" y="204" class="pin-num">10</text>
+    <line x1="750" y1="200" x2="780" y2="200" class="wire"/>
+    <line x1="780" y1="200" x2="780" y2="180" class="wire-pwr"/>
+    <circle cx="780" cy="180" r="2" class="dot"/>
+    
+    <!-- SRCLK (pin 11) - clock -->
+    <line x1="730" y1="220" x2="750" y2="220" class="wire"/>
+    <text x="725" y="224" text-anchor="end" class="pin-label">SRCLK</text>
+    <text x="735" y="224" class="pin-num">11</text>
+    <line x1="750" y1="220" x2="830" y2="220" class="wire"/>
+    <text x="835" y="223" class="net-label">SR_CLOCK</text>
+    
+    <!-- RCLK (pin 12) - latch -->
+    <line x1="730" y1="240" x2="750" y2="240" class="wire"/>
+    <text x="725" y="244" text-anchor="end" class="pin-label">RCLK</text>
+    <text x="735" y="244" class="pin-num">12</text>
+    <line x1="750" y1="240" x2="830" y2="240" class="wire"/>
+    <text x="835" y="243" class="net-label">SR_LATCH</text>
+    
+    <!-- /OE (pin 13) - tie to GND for always-on output -->
+    <line x1="730" y1="260" x2="750" y2="260" class="wire"/>
+    <text x="725" y="264" text-anchor="end" class="pin-label">/OE</text>
+    <text x="735" y="264" class="pin-num">13</text>
+    <line x1="750" y1="260" x2="780" y2="260" class="wire"/>
+    <line x1="780" y1="260" x2="780" y2="280" class="wire-gnd"/>
+    
+    <!-- SER (pin 14) - data input -->
+    <line x1="730" y1="280" x2="750" y2="280" class="wire"/>
+    <text x="725" y="284" text-anchor="end" class="pin-label">SER</text>
+    <text x="735" y="284" class="pin-num">14</text>
+    <line x1="750" y1="280" x2="830" y2="280" class="wire"/>
+    <text x="835" y="283" class="net-label">SR_DATA</text>
+    
+    <!-- Q7' (pin 9) - cascade output -->
+    <line x1="730" y1="320" x2="750" y2="320" class="wire-cascade"/>
+    <text x="725" y="324" text-anchor="end" class="pin-label">Q7'</text>
+    <text x="735" y="324" class="pin-num">9</text>
+    <line x1="750" y1="320" x2="830" y2="320" class="wire-cascade"/>
+    <text x="835" y="323" class="net-label" fill="#f60">CASCADE</text>
+    
+    <!-- Q0 (pin 15) - first output -->
+    <line x1="730" y1="380" x2="750" y2="380" class="wire"/>
+    <text x="725" y="384" text-anchor="end" class="pin-label">Q0</text>
+    <text x="735" y="384" class="pin-num">15</text>
+    <line x1="750" y1="380" x2="830" y2="380" class="wire"/>
+    <text x="835" y="383" class="net-label">KVM1_LED</text>
+    
+    <!-- Decoupling cap -->
+    <line x1="750" y1="180" x2="750" y2="135" class="wire-pwr"/>
+    <rect x="735" y="135" width="30" height="10" fill="#fff" stroke="#000"/>
+    <line x1="750" y1="105" x2="750" y2="125" class="wire-gnd"/>
+    <text x="775" y="125" class="pin-num">C5: 100nF</text>
+    <text x="750" y="100" text-anchor="middle" class="small-note">GND</text>
+    <text x="730" y="140" class="small-note">↑</text>
+  </g>
+  
+  <!-- ==================== U3: Second 74HC595 (cascaded) ==================== -->
+  <g id="U3">
+    <rect x="900" y="500" width="280" height="320" class="ic-body"/>
+    <text x="1040" y="525" text-anchor="middle" class="component-name">U3: 74HC595D (Cascaded)</text>
+    <text x="1040" y="540" text-anchor="middle" class="component-value">SOIC-16 / LCSC: C5947</text>
+    
+    <!-- Cascade input from U2 -->
+    <line x1="830" y1="320" x2="830" y2="660" class="wire-cascade"/>
+    <line x1="830" y1="660" x2="900" y2="660" class="wire-cascade"/>
+    <text x="850" y="500" class="small-note" fill="#f60">U2의 Q7'(pin9)에서</text>
+    <text x="850" y="513" class="small-note" fill="#f60">U3의 SER(pin14)로</text>
+    
+    <!-- Q0 - MUX2_SEL -->
+    <line x1="1180" y1="560" x2="1200" y2="560" class="wire"/>
+    <text x="1175" y="564" text-anchor="end" class="pin-label">Q0</text>
+    <text x="1185" y="564" class="pin-num">15</text>
+    <line x1="1200" y1="560" x2="1280" y2="560" class="wire"/>
+    <text x="1285" y="563" class="net-label">MUX2_SEL</text>
+    
+    <!-- Q1 - MUX2_OE -->
+    <line x1="1180" y1="580" x2="1200" y2="580" class="wire"/>
+    <text x="1175" y="584" text-anchor="end" class="pin-label">Q1</text>
+    <text x="1185" y="584" class="pin-num">1</text>
+    <line x1="1200" y1="580" x2="1280" y2="580" class="wire"/>
+    <text x="1285" y="583" class="net-label">MUX2_OE</text>
+    
+    <!-- Q2-Q7 = 예비 -->
+    <line x1="1180" y1="600" x2="1200" y2="600" class="wire"/>
+    <text x="1175" y="604" text-anchor="end" class="pin-label">Q2~Q7</text>
+    <text x="1185" y="604" class="pin-num">2~7</text>
+    <line x1="1200" y1="600" x2="1280" y2="600" class="wire" stroke-dasharray="3,2"/>
+    <text x="1285" y="603" class="small-note">예비 (NC)</text>
+    
+    <!-- VCC -->
+    <line x1="880" y1="560" x2="900" y2="560" class="wire-pwr"/>
+    <text x="905" y="564" class="pin-label">VCC</text>
+    <text x="885" y="564" text-anchor="end" class="pin-num">16</text>
+    <line x1="880" y1="560" x2="850" y2="560" class="wire-pwr"/>
+    <line x1="850" y1="560" x2="850" y2="180" class="wire-pwr"/>
+    <text x="845" y="555" class="net-label" fill="#c00">VCC</text>
+    
+    <!-- GND -->
+    <line x1="880" y1="700" x2="900" y2="700" class="wire-gnd"/>
+    <text x="905" y="704" class="pin-label">GND</text>
+    <text x="885" y="704" text-anchor="end" class="pin-num">8</text>
+    <line x1="880" y1="700" x2="780" y2="700" class="wire-gnd"/>
+    <line x1="780" y1="700" x2="780" y2="320" class="wire-gnd"/>
+    
+    <!-- SR_DATA in (SER, pin 14) -->
+    <line x1="880" y1="660" x2="900" y2="660" class="wire-cascade"/>
+    <text x="905" y="664" class="pin-label">SER</text>
+    <text x="885" y="664" text-anchor="end" class="pin-num">14</text>
+    
+    <!-- SR_CLOCK (pin 11) - shared -->
+    <line x1="880" y1="600" x2="900" y2="600" class="wire"/>
+    <text x="905" y="604" class="pin-label">SRCLK</text>
+    <text x="885" y="604" text-anchor="end" class="pin-num">11</text>
+    <line x1="880" y1="600" x2="830" y2="600" class="wire"/>
+    <line x1="830" y1="600" x2="830" y2="220" class="wire"/>
+    <circle cx="830" cy="220" r="2" class="dot"/>
+    <text x="800" y="595" class="small-note">SR_CLOCK</text>
+    
+    <!-- SR_LATCH (pin 12) - shared -->
+    <line x1="880" y1="620" x2="900" y2="620" class="wire"/>
+    <text x="905" y="624" class="pin-label">RCLK</text>
+    <text x="885" y="624" text-anchor="end" class="pin-num">12</text>
+    <line x1="880" y1="620" x2="820" y2="620" class="wire"/>
+    <line x1="820" y1="620" x2="820" y2="240" class="wire"/>
+    <circle cx="820" cy="240" r="2" class="dot"/>
+    <text x="800" y="615" class="small-note">SR_LATCH</text>
+    
+    <!-- /SRCLR (pin 10) -->
+    <line x1="880" y1="580" x2="900" y2="580" class="wire-pwr"/>
+    <text x="905" y="584" class="pin-label">/SRCLR</text>
+    <text x="885" y="584" text-anchor="end" class="pin-num">10</text>
+    <line x1="880" y1="580" x2="855" y2="580" class="wire-pwr"/>
+    <line x1="855" y1="580" x2="855" y2="560" class="wire-pwr"/>
+    <circle cx="855" cy="560" r="2" class="dot"/>
+    
+    <!-- /OE (pin 13) -->
+    <line x1="880" y1="540" x2="900" y2="540" class="wire-gnd"/>
+    <text x="905" y="544" class="pin-label">/OE</text>
+    <text x="885" y="544" text-anchor="end" class="pin-num">13</text>
+    <line x1="880" y1="540" x2="855" y2="540" class="wire-gnd"/>
+    <line x1="855" y1="540" x2="855" y2="700" class="wire-gnd"/>
+    <circle cx="855" cy="700" r="2" class="dot"/>
+    
+    <!-- Decoupling cap -->
+    <line x1="930" y1="560" x2="930" y2="510" class="wire-pwr"/>
+    <rect x="915" y="510" width="30" height="10" fill="#fff" stroke="#000"/>
+    <line x1="930" y1="500" x2="930" y2="510" class="wire-pwr"/>
+    <text x="955" y="510" class="pin-num">C6: 100nF</text>
+  </g>
+  
+  <!-- Output destinations summary -->
+  <g id="outputs-summary">
+    <rect x="1000" y="100" width="380" height="350" fill="#fffae6" stroke="#daa520" rx="4"/>
+    <text x="1190" y="125" text-anchor="middle" class="component-name">출력 신호 → 보드 다른 곳</text>
+    
+    <text x="1015" y="155" class="pin-label">KVM1_LED  → KVM_LED 커넥터 Pin 1 (기존)</text>
+    <text x="1015" y="175" class="pin-label">KVM2_LED  → KVM_LED 커넥터 Pin 2 (기존)</text>
+    <text x="1015" y="195" class="pin-label">KVM3_LED  → KVM_LED 커넥터 Pin 3 (기존)</text>
+    <text x="1015" y="215" class="pin-label">KVM4_LED  → KVM_LED 커넥터 Pin 4 (기존)</text>
+    <text x="1015" y="235" class="pin-label">KVM5_LED  → KVM_LED 커넥터 Pin 5 (기존)</text>
+    <text x="1015" y="255" class="pin-label">STATUS_LED → 보드 상의 단일 LED + 1kΩ</text>
+    
+    <line x1="1015" y1="275" x2="1370" y2="275" stroke="#daa520" stroke-dasharray="3,2"/>
+    
+    <text x="1015" y="295" class="pin-label">MUX1_SEL  → SN74CB3Q3253 #1 Pin 1 (S)</text>
+    <text x="1015" y="315" class="pin-label">MUX1_OE   → SN74CB3Q3253 #1 Pin 15 (OE)</text>
+    <text x="1015" y="335" class="pin-label">MUX2_SEL  → SN74CB3Q3253 #2 Pin 1 (S)</text>
+    <text x="1015" y="355" class="pin-label">MUX2_OE   → SN74CB3Q3253 #2 Pin 15 (OE)</text>
+    
+    <line x1="1015" y1="375" x2="1370" y2="375" stroke="#daa520" stroke-dasharray="3,2"/>
+    
+    <text x="1015" y="395" class="pin-label" font-style="italic">⚠ 5V → 3.3V 변환 필요</text>
+    <text x="1015" y="415" class="small-note">74HC595 출력은 5V, SN74CB3Q3253은 3.3V로 동작</text>
+    <text x="1015" y="430" class="small-note">하지만 SN74CB3Q3253의 SEL/OE는 5V 입력 허용 → 직결 OK</text>
+  </g>
+  
+  <!-- Legend -->
+  <g id="legend" transform="translate(50, 800)">
+    <rect x="0" y="0" width="600" height="80" fill="#fff" stroke="#666" rx="4"/>
+    <text x="10" y="20" class="component-name">캐스케이드 동작 원리</text>
+    <text x="10" y="40" class="pin-label">- AVR128DB64는 SR_DATA, SR_CLOCK, SR_LATCH 3개 핀만 사용</text>
+    <text x="10" y="58" class="pin-label">- 16비트 데이터 전송: U2의 Q7'(pin9) → U3의 SER(pin14)로 캐스케이드</text>
+    <text x="10" y="76" class="pin-label">- 펌웨어에서 16비트를 MSB부터 전송하면 U3(상위 8비트), U2(하위 8비트)에 분배</text>
+  </g>
+  
+  <text x="1380" y="880" text-anchor="end" class="small-note">Sheet 2/4 - MegaKey v4.0</text>
+</svg>

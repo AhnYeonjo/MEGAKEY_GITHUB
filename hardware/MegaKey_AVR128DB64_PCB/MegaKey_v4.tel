@@ -1,0 +1,151 @@
+$PACKAGES
+QFP-64_L10.0-W10.0-P0.50-LS12.0-BL ! QFP-64_L10.0-W10.0-P0.50-LS12.0-BL ! AVR128DB64-I/PT ; U1
+SOIC-16_L10.0-W4.0-P1.27-LS6.0-BL ! SOIC-16_L10.0-W4.0-P1.27-LS6.0-BL ! 74HC595D ; U2, U3
+HDR-TH_6P-P2.54_KF2EDGV-2.54-6P ! HDR-TH_6P-P2.54_KF2EDGV-2.54-6P ! Pin Header 1x6 2.54mm ; J_PROG
+SOD-123_L2.7-W1.7-LS3.5-RD ! SOD-123_L2.7-W1.7-LS3.5-RD ! 1N5817 ; D1, D2
+R0603 ! R0603 ! 1kΩ ; R_TX
+R0603 ! R0603 ! 4.7kΩ ; R_UP
+R0603 ! R0603 ! 1kΩ ; R_LED
+C0603 ! C0603 ! 100nF ; C1, C2, C3, C4, C5, C6, C_AVDD, C_VDDIO2
+C0805 ! C0805 ! 10uF ; C7
+LED0603 ! LED0603 ! LED_GREEN ; LED_PWR
+FB0603 ! FB0603 ! BLM18PG471SH1 ; FB1
+
+$A_PROPERTIES
+* MegaKey IO PCB v4.0 — AVR128DB64-I/PT Edition
+* Project: MegaKey_AVR128DB64_PCB
+* Created: 2026-05-28
+* Replaces: MegaKey_IO_PCB v3.4 (Arduino Mega 2560 PRO)
+* Migration: Mega2560 → AVR128DB64 + 74HC595 ×2 + FTDI 헤더
+
+$NETS
+
+* ========== Power Rails ==========
+'VCC' ; U1.VDD U1.AVDD U1.VDDIO2 U2.16 U3.16 R_UP.2 J_PROG.4_via_D2 D1.2 D2.2 C7.1 C1.1 C2.1 C3.1 C4.1 C5.1 C6.1 C_AVDD.1 C_VDDIO2.1 FB1.2 LED_PWR.A
+'GND' ; U1.GND U2.8 U2.13 U3.8 U3.13 J_PROG.6 R_LED.2 C7.2 C1.2 C2.2 C3.2 C4.2 C5.2 C6.2 C_AVDD.2 C_VDDIO2.2
+
+* ========== Programming Interface (FTDI Header → UPDI) ==========
+'UPDI' ; U1.PF7 R_UP.1 R_TX.2 J_PROG.2
+'$FTDI_TX' ; J_PROG.3 R_TX.1
+'$FTDI_VCC_IN' ; J_PROG.4 D2.1
+'$JAMMA_5V_IN' ; D1.1
+* Note: J_PROG.1 (DTR), J_PROG.5 (CTS) = NC
+
+* ========== MCU Timer Outputs (PWM via TCB) ==========
+'IR_LED' ; U1.PA2
+'JVS_SENSE' ; U1.PA3
+
+* ========== UART Communications ==========
+* USART0 (PA0/PA1) = JVS
+'JVS_TX' ; U1.PA0
+'JVS_RX' ; U1.PA1
+* USART2 (PF0) = RP2040 #1 (1P), PF1 used as P2_TOUCHPAD (RX disabled)
+'RP2040_1P_TX' ; U1.PF0
+* USART3 (PB0) = RP2040 #2 (2P), PB1 used as P1_A (RX disabled)
+'RP2040_2P_TX' ; U1.PB0
+
+* ========== Player 1 Buttons (Active-low, INPUT_PULLUP) ==========
+'1P_UP' ; U1.PA4
+'1P_DOWN' ; U1.PA5
+'1P_LEFT' ; U1.PA6
+'1P_RIGHT' ; U1.PA7
+'1P_A' ; U1.PB1
+'1P_B' ; U1.PB2
+'1P_X' ; U1.PB3
+'1P_Y' ; U1.PB4
+'1P_LB' ; U1.PB5
+'1P_RB' ; U1.PB6
+'1P_LT' ; U1.PB7
+'1P_RT' ; U1.PC0
+'1P_START' ; U1.PC1
+'1P_SELECT' ; U1.PC2
+'1P_HOME' ; U1.PC3
+'1P_TURBO' ; U1.PC4
+'1P_TOUCH' ; U1.PC5
+'1P_LANAL' ; U1.PC6
+'1P_RANAL' ; U1.PC7
+
+* ========== Player 2 Buttons (Active-low, INPUT_PULLUP) ==========
+'2P_UP' ; U1.PD0
+'2P_DOWN' ; U1.PD1
+'2P_LEFT' ; U1.PD2
+'2P_RIGHT' ; U1.PD3
+'2P_A' ; U1.PD4
+'2P_B' ; U1.PD5
+'2P_X' ; U1.PD6
+'2P_Y' ; U1.PD7
+'2P_LB' ; U1.PE0
+'2P_RB' ; U1.PE1
+'2P_LT' ; U1.PE2
+'2P_RT' ; U1.PE3
+'2P_START' ; U1.PE4
+'2P_SELECT' ; U1.PE5
+'2P_HOME' ; U1.PE6
+'2P_TURBO' ; U1.PE7
+'2P_TOUCH' ; U1.PF1
+'2P_LANAL' ; U1.PF2
+'2P_RANAL' ; U1.PF3
+
+* ========== Shift Register Control (74HC595 × 2 Cascade) ==========
+'SR_DATA' ; U1.PF4 U2.14
+'SR_CLOCK' ; U1.PF5 U2.11 U3.11
+'SR_LATCH' ; U1.PF6 U2.12 U3.12
+'$SR_CASCADE' ; U2.9 U3.14
+
+* ========== Shift Register Outputs (16-bit) ==========
+* U2 outputs (Q0-Q7, bits 0-7)
+'KVM1_LED' ; U2.15
+'KVM2_LED' ; U2.1
+'KVM3_LED' ; U2.2
+'KVM4_LED' ; U2.3
+'KVM5_LED' ; U2.4
+'STATUS_LED' ; U2.5 LED_PWR.K R_LED.1
+'MUX1_SEL' ; U2.6
+'MUX1_OE' ; U2.7
+* U3 outputs (Q0-Q7, bits 8-15)
+'MUX2_SEL' ; U3.15
+'MUX2_OE' ; U3.1
+* U3 Q2-Q7 (bits 10-15) = reserved (NC)
+
+* ========== KVM Channel Selection Switches ==========
+'KVM1_SW' ; U1.PG0
+'KVM2_SW' ; U1.PG1
+'KVM3_SW' ; U1.PG2
+'KVM4_SW' ; U1.PG3
+'KVM5_SW' ; U1.PG4
+
+* ========== Mode Selection Switches ==========
+'CHK_JOYSTICK' ; U1.PG5
+'CHK_JVS' ; U1.PG6
+'CHK_SWAPSTICK' ; U1.PG7
+
+* ========== Connections to Existing Components ==========
+* (이하 네트는 기존 v3.4 회로의 연결을 그대로 유지)
+* JAMMA1, JAMMA2, DB251P, DB252P 등은 기존과 동일하게 연결
+* 각 버튼 네트는 위의 1P_xxx, 2P_xxx 네트와 동일
+*
+* 예시:
+* '1P_UP' ; U1.PA4 DB251P.1 JAMMA1.5
+* '1P_A'  ; U1.PB1 DB251P.8 JAMMA1.4
+* '2P_UP' ; U1.PD0 DB252P.1 JAMMA2.5
+* RP2040 ZERO 모듈: GP0(pin 1) = TX-in from MCU
+* 'RP2040_1P_TX' ; U1.PF0 RP2040_ZERO_1P.1
+* 'RP2040_2P_TX' ; U1.PB0 RP2040_ZERO_2P.1
+* JVS:
+* 'JVS_TX' ; U1.PA0 JVSIO.4 (또는 기존 RJ1, RJ2 라인)
+* 'JVS_RX' ; U1.PA1 JVSIO.5
+* 'JVS_SENSE' ; U1.PA3 JVSIO.3 (기존 D9 자리)
+* IR LED:
+* 'IR_LED' ; U1.PA2 RK1-1kΩ.1 (기존 2N2222 베이스로)
+
+$SCHEDULE
+* MegaKey v4.0 - Component placement priority:
+* 1. U1 (AVR128DB64) - 중앙
+* 2. U2, U3 (74HC595) - U1 우측, LED 근처
+* 3. J_PROG (FTDI) - 보드 가장자리, 접근 용이
+* 4. D1, D2 (Schottky) - J_PROG 옆
+* 5. C1-C4 (100nF) - 각 U1 VDD 핀 옆
+* 6. C7 (10uF) - VCC 입력단
+* 7. R_TX, R_UP - UPDI 라인 가까이
+
+$END

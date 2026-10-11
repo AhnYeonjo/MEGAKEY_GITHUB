@@ -148,6 +148,12 @@ exclusivity). Docs: [`rp2040-gp2040-addon.md`](docs/rp2040-gp2040-addon.md)
 | [`docs/sn74cb3q3253-mux.md`](docs/sn74cb3q3253-mux.md) | USB mux chip control semantics |
 | [`docs/firmware-*.md`](docs/) | Per-module documentation |
 
+## Hardware (EasyEDA)
+
+The matching PCB/schematic designs are archived under
+[`hardware/`](hardware/) — one folder per board, mapped to the firmware modules
+(the online source project requires the designer's EasyEDA login).
+
 ## License
 
 Each module follows its own SPDX header; where no notice is present the source is MIT.
