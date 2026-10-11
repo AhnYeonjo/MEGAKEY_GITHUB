@@ -1,5 +1,8 @@
 # PowerController — Cabinet Power Sequencer & Lighting
 
+**Purpose:** this board lets a standard **ATX PC power supply** act as the main power
+source for the **VEWLIX arcade cabinet**, and sequences the per-console loads from it.
+
 Target: **Arduino Pro Micro** (ATmega32U4). Controls 5 relay groups (with shared
 button LEDs) and the cabinet lighting via a PWM MOSFET.
 

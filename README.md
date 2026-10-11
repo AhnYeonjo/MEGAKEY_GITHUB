@@ -1,10 +1,14 @@
 # MegaKey — JAMMA / Arcade Controller System
 
-A complete custom **2-player arcade controller platform**: one microcontroller scans
+**Purpose.** This project was developed to integrate and support many different
+home/arcade **game consoles through a single VEWLIX arcade cabinet** — one control
+panel, one display, one USB host switch, with sequenced power per console. It is a
+complete custom **2-player arcade controller platform**: one microcontroller scans
 both player panels and drives the entire cabinet — KVM host selection (USB multiplexer
 + IR HDMI switching), multi-protocol gamepad output through two GP2040-CE RP2040
 boards, JAMMA JVS support, video conversion and sequenced power.
 
+> **Target cabinet: VEWLIX** (and compatible arcade cabinets).
 > **Developer: An Yeon-jo**
 
 ---
@@ -101,8 +105,12 @@ Docs: [`firmware-MultiSourceController.md`](docs/firmware-MultiSourceController.
 
 ### `firmware/PowerController` (ATmega32U4)
 
-Latching switch inputs select relay groups (shared with button LEDs); lighting level
-from a potentiometer via PWM; boot animation never toggles relay pins.
+**Cabinet power controller built to drive an ATX power supply as the VEWLIX cabinet's
+main power.** The ATX PSU is the cabinet's power source; this board sequences it and
+the per-console loads: latching switch inputs select relay groups (shared with button
+LEDs) — JAMMA harness, TTX3, Naomi and two AC outlets — and the cabinet lighting runs
+from a potentiometer via a PWM MOSFET. The boot animation deliberately never toggles
+the relay pins.
 Docs: [`firmware-PowerController.md`](docs/firmware-PowerController.md)
 
 ### `firmware/IR_SignalAnalyzer` (AVR)
@@ -150,15 +158,15 @@ exclusivity). Docs: [`rp2040-gp2040-addon.md`](docs/rp2040-gp2040-addon.md)
 
 ## Hardware (PCB fabrication)
 
-JLCPCB/EasyEDA fabrication packages are committed at the repository root as three
-`*.zip` archives (Gerber drill + copper + pick-and-place + 3-D renders). Each has been
-verified against the firmware net names / silkscreen:
+JLCPCB/EasyEDA fabrication packages are archived under [`hardware/`](hardware/) as
+three `*.zip` archives (Gerber drill + copper + pick-and-place + 3-D renders). Each
+has been verified against the firmware net names / silkscreen:
 
 | Archive | Board | Verified against firmware |
 |---|---|---|
-| [`MegaPCB.zip`](MegaPCB.zip) | Main IO board — `MEGA2560PRO-EMBED`, `RP2040_ZERO_1P/2P`, `JAMMA1/2`, `JVSIO`, `DREAMCAST_1P/2P`, MUX control | [`firmware/MegaKey_IO`](firmware/MegaKey_IO) (v3.4) |
-| [`POWERPCB.zip`](POWERPCB.zip) | Power sequencer — `K1..K7` relays, `IRLZ44N` LED MOSFET, `12V_PWN`, `JAMMA_PB30` | [`firmware/PowerController`](firmware/PowerController) |
-| [`USBMUX.zip`](USBMUX.zip) | USB KVM switch — `U1/U2 = FSUSB42MUX`, `USB_HUB`, `AMS1117-3.3`, `PC1..PC4` | `setKvmChannel()` in MegaKey_IO + AVR128DB64 |
+| [`hardware/MegaPCB.zip`](hardware/MegaPCB.zip) | Main IO board — `MEGA2560PRO-EMBED`, `RP2040_ZERO_1P/2P`, `JAMMA1/2`, `JVSIO`, `DREAMCAST_1P/2P`, MUX control | [`firmware/MegaKey_IO`](firmware/MegaKey_IO) (v3.4) |
+| [`hardware/POWERPCB.zip`](hardware/POWERPCB.zip) | Cabinet power board — drives an **ATX PSU** as the VEWLIX cabinet supply; `K1..K7` relays (JAMMA/TTX3/Naomi/AC), `IRLZ44N` LED MOSFET, `12V_PWN` | [`firmware/PowerController`](firmware/PowerController) |
+| [`hardware/USBMUX.zip`](hardware/USBMUX.zip) | USB KVM switch — `U1/U2 = FSUSB42MUX`, `USB_HUB`, `AMS1117-3.3`, `PC1..PC4` | `setKvmChannel()` in MegaKey_IO + AVR128DB64 |
 
 > **Note:** the v4.0 **AVR128DB64** board (the current main controller) has **no
 > fabrication zip in this set** — its netlist/schematic source lives only in the
